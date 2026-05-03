@@ -32,9 +32,17 @@ export default async function ExperiencePage({
 			<div className="flex min-h-screen items-center justify-center p-8">
 				<div className="max-w-lg rounded-xl border border-gray-a4 bg-gray-a2 p-6">
 					<h1 className="text-8 font-bold mb-2">Access Required</h1>
-					<p className="text-4 text-gray-11">
-						You do not currently have access to Recon AI. Please purchase access on Whop to get started.
+					<p className="text-4 text-gray-11 mb-6">
+						You do not currently have access to Recon AI. Purchase access to get started.
 					</p>
+					<a
+						href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+					>
+						Purchase Recon AI
+					</a>
 				</div>
 			</div>
 		);

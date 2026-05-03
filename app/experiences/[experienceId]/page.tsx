@@ -24,15 +24,16 @@ export default async function ExperiencePage({
 	// Ensure the user is logged in on Whop.
 	const { userId } = await whopsdk.verifyUserToken(await headers());
 
-	// Verify entitlement for this experience.
-	const access = await whopsdk.users.checkAccess(experienceId, { id: userId });
+	// Verify user has access to Recon AI product
+	const productId = "prod_wnUBQEF08WxYE";
+	const access = await whopsdk.users.checkAccess(productId, { id: userId });
 	if (!access.has_access) {
 		return (
 			<div className="flex min-h-screen items-center justify-center p-8">
 				<div className="max-w-lg rounded-xl border border-gray-a4 bg-gray-a2 p-6">
 					<h1 className="text-8 font-bold mb-2">Access Required</h1>
 					<p className="text-4 text-gray-11">
-						You do not currently have access to this tool. Please purchase the required plan in Whop.
+						You do not currently have access to Recon AI. Please purchase access on Whop to get started.
 					</p>
 				</div>
 			</div>

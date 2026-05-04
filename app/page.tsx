@@ -1,30 +1,39 @@
-import { headers } from "next/headers";
-import { whopsdk } from "@/lib/whop-sdk";
+"use client";
 
-export default async function Page() {
-	try {
-		// Try to verify user is logged in
-		const { userId } = await whopsdk.verifyUserToken(await headers());
+import { useEffect, useState } from "react";
 
-		// Check if they have access to Recon AI product
-		const productId = "prod_wnUBQEF08WxYE";
-		const access = await whopsdk.users.checkAccess(productId, { id: userId });
+export default function Page() {
+	const [userId, setUserId] = useState<string | null>(null);
+	const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+	const [loading, setLoading] = useState(true);
 
-		if (access.has_access) {
-			// User has access - show full app
-			return (
-				<div className="w-screen h-screen overflow-hidden">
-					<iframe
-						title="Recon Lead Tool"
-						src={`/lead-tool.html?uid=${userId}`}
-						className="w-full h-full border-0"
-						allow="clipboard-read; clipboard-write"
-					/>
-				</div>
-			);
-		}
-	} catch (error) {
-		// Not authenticated - show preview
+	useEffect(() => {
+		const checkAccess = async () => {
+			try {
+				const response = await fetch("/api/check-access");
+				const data = await response.json();
+				setUserId(data.userId);
+				setHasAccess(data.hasAccess);
+			} catch (error) {
+				setHasAccess(false);
+			} finally {
+				setLoading(false);
+			}
+		};
+		checkAccess();
+	}, []);
+
+	if (hasAccess && userId) {
+		return (
+			<div className="w-screen h-screen overflow-hidden">
+				<iframe
+					title="Recon Lead Tool"
+					src={`/lead-tool.html?uid=${userId}`}
+					className="w-full h-full border-0"
+					allow="clipboard-read; clipboard-write"
+				/>
+			</div>
+		);
 	}
 
 	// Show blurred preview with purchase CTA

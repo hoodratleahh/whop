@@ -1,41 +1,33 @@
-"use client";
+import { headers } from "next/headers";
+import { whopsdk } from "@/lib/whop-sdk";
 
-import { useEffect, useState } from "react";
+export default async function Page() {
+	try {
+		// Try to verify user is logged in
+		const { userId } = await whopsdk.verifyUserToken(await headers());
 
-export default function Page() {
-	const [userId, setUserId] = useState<string | null>(null);
-	const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-	const [loading, setLoading] = useState(true);
+		// Check if they have access to Recon AI product
+		const productId = "prod_wnUBQEF08WxYE";
+		const access = await whopsdk.users.checkAccess(productId, { id: userId });
 
-	useEffect(() => {
-		const checkAccess = async () => {
-			try {
-				const response = await fetch("/api/check-access");
-				const data = await response.json();
-				setUserId(data.userId);
-				setHasAccess(data.hasAccess);
-			} catch (error) {
-				setHasAccess(false);
-			} finally {
-				setLoading(false);
-			}
-		};
-		checkAccess();
-	}, []);
-
-	if (hasAccess && userId) {
-		return (
-			<div className="w-screen h-screen overflow-hidden">
-				<iframe
-					title="Recon Lead Tool"
-					src={`/lead-tool.html?uid=${userId}`}
-					className="w-full h-full border-0"
-					allow="clipboard-read; clipboard-write"
-				/>
-			</div>
-		);
+		if (access.has_access) {
+			// User has access - show full app
+			return (
+				<div className="w-screen h-screen overflow-hidden">
+					<iframe
+						title="Recon Lead Tool"
+						src={`/lead-tool.html?uid=${userId}`}
+						className="w-full h-full border-0"
+						allow="clipboard-read; clipboard-write"
+					/>
+				</div>
+			);
+		}
+	} catch (error) {
+		// Not authenticated - show preview
 	}
 
+	// Show blurred preview with purchase CTA
 	return (
 		<div
 			className="relative w-screen h-screen overflow-hidden"
@@ -60,7 +52,7 @@ export default function Page() {
 				}}
 			/>
 
-			{/* Auth card */}
+			{/* CTA card */}
 			<div className="absolute inset-0 flex items-center justify-center p-4">
 				<div
 					className="w-full max-w-md rounded-[10px] border p-8 backdrop-blur-xl"
@@ -93,67 +85,42 @@ export default function Page() {
 						</p>
 					</div>
 
-					{/* Content */}
-					{loading ? (
-						<div className="text-center py-8">
-							<div className="inline-block animate-spin">
-								<div
-									className="w-5 h-5 border-2 border-t-transparent rounded-full"
-									style={{
-										borderColor: "#25252f",
-										borderTopColor: "#f0a020",
-									}}
-								/>
-							</div>
-							<p
-								className="mt-3"
-								style={{
-									fontSize: "12px",
-									color: "#888898",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-								}}
-							>
-								Checking access...
-							</p>
-						</div>
-					) : (
-						<div>
-							<p
-								className="mb-6"
-								style={{
-									fontSize: "13px",
-									color: "#55556a",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-									lineHeight: "1.6",
-								}}
-							>
-								Get instant access to research leads, generate personalized cold
-								calling scripts, and track your pipeline.
-							</p>
+					<div>
+						<p
+							className="mb-6"
+							style={{
+								fontSize: "13px",
+								color: "#55556a",
+								fontFamily: "'Plus Jakarta Sans', sans-serif",
+								lineHeight: "1.6",
+							}}
+						>
+							Get instant access to research leads, generate personalized cold
+							calling scripts, and track your pipeline.
+						</p>
 
-							<a
-								href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-								className="block w-full py-3 px-4 rounded-[10px] text-center font-semibold transition-all"
-								style={{
-									background: "#f0a020",
-									color: "#0b0b0f",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-									fontSize: "13px",
-									fontWeight: 600,
-									cursor: "pointer",
-									border: "none",
-								}}
-								onMouseEnter={(e) => {
-									e.currentTarget.style.background = "#fbbf24";
-								}}
-								onMouseLeave={(e) => {
-									e.currentTarget.style.background = "#f0a020";
-								}}
-							>
-								Unlock Recon AI
-							</a>
-						</div>
-					)}
+						<a
+							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+							className="block w-full py-3 px-4 rounded-[10px] text-center font-semibold transition-all"
+							style={{
+								background: "#f0a020",
+								color: "#0b0b0f",
+								fontFamily: "'Plus Jakarta Sans', sans-serif",
+								fontSize: "13px",
+								fontWeight: 600,
+								cursor: "pointer",
+								border: "none",
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.background = "#fbbf24";
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.background = "#f0a020";
+							}}
+						>
+							Unlock Recon AI
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>

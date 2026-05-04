@@ -52,7 +52,7 @@ export default async function ExperiencePage({
 		<div className="w-screen h-screen overflow-hidden">
 			<iframe
 				title="Recon Lead Tool"
-				src={`/lead-tool.html?uid=${userId}`}
+				src={`/lead-tool.html?uid=${encodeURIComponent(userId)}`}
 				className="w-full h-full border-0"
 				allow="clipboard-read; clipboard-write"
 			/>

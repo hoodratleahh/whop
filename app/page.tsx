@@ -28,7 +28,7 @@ export default function Page() {
 			<div className="w-screen h-screen overflow-hidden">
 				<iframe
 					title="Recon Lead Tool"
-					src={`/lead-tool.html?uid=${encodeURIComponent(userId)}`}
+					src={`/api/tool?uid=${encodeURIComponent(userId)}`}
 					className="w-full h-full border-0"
 					allow="clipboard-read; clipboard-write"
 				/>
@@ -36,21 +36,17 @@ export default function Page() {
 		);
 	}
 
-	// Show blurred preview with purchase CTA
+	// Show blurred preview with purchase CTA (no iframe - just static content)
 	return (
 		<div
 			className="relative w-screen h-screen overflow-hidden"
 			style={{ background: "#0b0b0f" }}
 		>
-			{/* Blurred preview */}
-			<div className="absolute inset-0 w-full h-full">
-				<iframe
-					title="Preview"
-					src="/lead-tool.html"
-					className="w-full h-full border-0 blur-md"
-					style={{ pointerEvents: "none" }}
-				/>
-			</div>
+			{/* Static blurred background instead of loading app */}
+			<div className="absolute inset-0 w-full h-full" style={{
+				background: "radial-gradient(circle at center, rgba(11,11,15,0.5) 0%, rgba(11,11,15,0.95) 100%)",
+				backdropFilter: "blur(4px)"
+			}} />
 
 			{/* Dark gradient overlay */}
 			<div

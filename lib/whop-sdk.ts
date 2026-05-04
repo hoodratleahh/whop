@@ -1,7 +1,13 @@
 import { Whop } from "@whop/sdk";
 
+const webhookSecret = process.env.WHOP_WEBHOOK_SECRET;
+
 export const whopsdk = new Whop({
 	appID: process.env.NEXT_PUBLIC_WHOP_APP_ID,
 	apiKey: process.env.WHOP_API_KEY,
-	webhookKey: btoa(process.env.WHOP_WEBHOOK_SECRET || ""),
+	webhookKey: webhookSecret ? btoa(webhookSecret) : btoa(""),
 });
+
+if (!webhookSecret) {
+	console.warn("[whop-sdk] WHOP_WEBHOOK_SECRET not set - webhook verification will fail at runtime");
+}

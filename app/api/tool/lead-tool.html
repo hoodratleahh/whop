@@ -827,7 +827,7 @@ function App(){
     tracker:  <Tracker leads={state.savedLeads} onStatus={updateStatus} onSelect={setModal} apiKeys={state.apiKeys}/>,
     script:   <ScriptGen savedLeads={state.savedLeads} onGen={()=>{sound('pop');showMascot('thinking');}} onDone={()=>{grantXp(XP_REWARDS.script,'+25 XP script');sound('success');showMascot('found','script ready!');}}/>,
     sites:    <DemoBuilder savedLeads={state.savedLeads} apiKeys={state.apiKeys}/>,
-    settings: <Settings apiKeys={state.apiKeys} serperUsage={state.serperUsage||0} onSave={saveKeys} fullState={state} onStateUpdate={s=>{save(s)}}/>,
+    settings: <Settings apiKeys={state.apiKeys} serperUsage={state.serperUsage||0} onSave={saveKeys}/>,
   };
 
   const pageLabels = {dashboard:'Dashboard',search:'Lead Search',tracker:'Lead Tracker',script:'Script Generator',sites:'Demo Sites',settings:'Settings'};
@@ -836,13 +836,8 @@ function App(){
 
   return (
     <div className="app">
-      {/* DATA BACKUP WARNING */}
-      <div style={{position:'fixed',top:0,left:0,right:0,background:'rgba(239,68,68,.08)',padding:'8px 20px',textAlign:'center',fontSize:12,color:'var(--text3)',fontWeight:500,zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-        <span style={{color:'var(--amber)',fontSize:14}}>*</span>
-        <span>Data stored locally. <strong style={{color:'var(--text2)'}}>Settings → Download Backup</strong> to save regularly.</span>
-      </div>
       {/* SIDEBAR */}
-      <div className="sidebar" style={{marginTop:39}}>
+      <div className="sidebar">
         <div className="logo-wrap">
           <div className="logo-mark">
             <svg viewBox="0 0 30 30" fill="none">
@@ -1897,75 +1892,12 @@ Coach:`;
 }
 
 /* ── SETTINGS ────────────────────────────────────────────── */
-function Settings({apiKeys,serperUsage,onSave,fullState,onStateUpdate}){
+function Settings({apiKeys,serperUsage,onSave}){
   const [keys,setKeys]=useState(apiKeys);
   const [saved,setSaved]=useState(false);
-  const [importStatus,setImportStatus]=useState('');
   const doSave=()=>{onSave(keys);setSaved(true);setTimeout(()=>setSaved(false),2000);};
-
-  const exportData=()=>{
-    const json=JSON.stringify(fullState, null, 2);
-    const blob=new Blob([json], {type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`recon-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const importData=(e)=>{
-    const file=e.target.files?.[0];
-    if(!file) return;
-    const reader=new FileReader();
-    reader.onload=(evt)=>{
-      try{
-        const data=JSON.parse(evt.target.result);
-        if(data.savedLeads && data.stats && data.apiKeys){
-          onStateUpdate(data);
-          setImportStatus('Imported successfully!');
-          setTimeout(()=>setImportStatus(''), 3000);
-        }else{
-          setImportStatus('Invalid backup file format');
-          setTimeout(()=>setImportStatus(''), 3000);
-        }
-      }catch(err){
-        setImportStatus('Failed to parse file');
-        setTimeout(()=>setImportStatus(''), 3000);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const deleteAllData=()=>{
-    if(confirm('⚠️ This will permanently delete ALL your leads, stats, and data. This cannot be undone. Are you sure?\n\nWe recommend downloading a backup first!')){
-      onStateUpdate({savedLeads:[], stats:{totalLeads:0,closed:0,revenue:0}, apiKeys:{openrouter:'',groq:'',serper:'',google:''}, xp:0, level:1, streak:0, lastActiveDate:null, serperUsage:0});
-      setImportStatus('All data deleted');
-      setTimeout(()=>setImportStatus(''), 3000);
-    }
-  };
-
   return(
     <div style={{maxWidth:660}}>
-      <div className="settings-block">
-        <div className="settings-title">Data Backup & Recovery</div>
-        <div className="settings-sub">Your data is stored locally on this device. Download regular backups to prevent data loss.</div>
-        <div style={{display:'flex',flexDirection:'column',gap:8}}>
-          <button className="btn btn-primary" onClick={exportData} style={{justifyContent:'center'}}>
-            <Ic n="save" s={14}/>Download Backup
-          </button>
-          <div style={{position:'relative'}}>
-            <input type="file" accept=".json" onChange={importData} style={{display:'none'}} id="importFile"/>
-            <button className="btn btn-ghost" onClick={()=>document.getElementById('importFile').click()} style={{justifyContent:'center',width:'100%'}}>
-              <Ic n="upload" s={14}/>Restore from Backup
-            </button>
-          </div>
-          {importStatus && <div style={{padding:'8px 12px',background:importStatus.includes('successfully')?'var(--greenDim)':'var(--redDim)',color:importStatus.includes('successfully')?'var(--green)':'var(--red)',borderRadius:'var(--r)',fontSize:12,textAlign:'center'}}>{importStatus}</div>}
-          <button className="btn btn-ghost" onClick={deleteAllData} style={{justifyContent:'center',color:'var(--red)',borderColor:'var(--red)'}}>
-            <Ic n="trash" s={14}/>Wipe All Data
-          </button>
-        </div>
-      </div>
       <div className="settings-block">
         <div className="settings-title">API Keys</div>
         <div className="settings-sub">Connect AI providers to power lead analysis and script generation. Keys are stored locally — never sent to our servers.</div>

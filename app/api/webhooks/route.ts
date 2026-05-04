@@ -2,20 +2,32 @@ import { waitUntil } from "@vercel/functions";
 import type { Payment } from "@whop/sdk/resources.js";
 import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest): Promise<Response> {
-	// Validate the webhook to ensure it's from Whop
-	const requestBodyText = await request.text();
-	const headers = Object.fromEntries(request.headers);
-	const webhookData = whopsdk.webhooks.unwrap(requestBodyText, { headers });
+	try {
+		// Rate limiting on webhook endpoint
+		const ip = getClientIp(request);
+		if (isRateLimited(ip, 30)) {
+			return new Response("Too Many Requests", { status: 429 });
+		}
 
-	// Handle the webhook event
-	if (webhookData.type === "payment.succeeded") {
-		waitUntil(handlePaymentSucceeded(webhookData.data));
+		// Validate the webhook to ensure it's from Whop
+		const requestBodyText = await request.text();
+		const headers = Object.fromEntries(request.headers);
+		const webhookData = whopsdk.webhooks.unwrap(requestBodyText, { headers });
+
+		// Handle the webhook event
+		if (webhookData.type === "payment.succeeded") {
+			waitUntil(handlePaymentSucceeded(webhookData.data));
+		}
+
+		// Make sure to return a 2xx status code quickly. Otherwise the webhook will be retried.
+		return new Response("OK", { status: 200 });
+	} catch (error) {
+		console.error("[webhook] Signature verification failed:", error instanceof Error ? error.message : String(error));
+		return new Response("Bad Request", { status: 400 });
 	}
-
-	// Make sure to return a 2xx status code quickly. Otherwise the webhook will be retried.
-	return new Response("OK", { status: 200 });
 }
 
 async function handlePaymentSucceeded(payment: Payment) {

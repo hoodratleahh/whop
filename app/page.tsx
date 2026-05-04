@@ -8,18 +8,13 @@ export default function Page() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		// Check if user has access via Whop API
 		const checkAccess = async () => {
 			try {
-				const response = await fetch("/api/check-access", {
-					method: "GET",
-					headers: { "Content-Type": "application/json" },
-				});
+				const response = await fetch("/api/check-access");
 				const data = await response.json();
 				setUserId(data.userId);
 				setHasAccess(data.hasAccess);
 			} catch (error) {
-				console.error("Error checking access:", error);
 				setHasAccess(false);
 			} finally {
 				setLoading(false);
@@ -28,7 +23,6 @@ export default function Page() {
 		checkAccess();
 	}, []);
 
-	// Show full app if authenticated and has access
 	if (hasAccess && userId) {
 		return (
 			<div className="w-screen h-screen overflow-hidden">
@@ -42,53 +36,121 @@ export default function Page() {
 		);
 	}
 
-	// Show blurred preview with login overlay
 	return (
-		<div className="relative w-screen h-screen overflow-hidden bg-black">
-			{/* Blurred background preview */}
+		<div
+			className="relative w-screen h-screen overflow-hidden"
+			style={{ background: "#0b0b0f" }}
+		>
+			{/* Blurred preview */}
 			<div className="absolute inset-0 w-full h-full">
 				<iframe
 					title="Preview"
 					src="/lead-tool.html"
-					className="w-full h-full border-0 blur-sm"
+					className="w-full h-full border-0 blur-md"
 					style={{ pointerEvents: "none" }}
 				/>
 			</div>
 
-			{/* Dark overlay */}
-			<div className="absolute inset-0 bg-black/70" />
+			{/* Dark gradient overlay */}
+			<div
+				className="absolute inset-0"
+				style={{
+					background:
+						"radial-gradient(circle at center, rgba(11,11,15,0.75) 0%, rgba(11,11,15,0.95) 100%)",
+				}}
+			/>
 
-			{/* Auth overlay */}
+			{/* Auth card */}
 			<div className="absolute inset-0 flex items-center justify-center p-4">
-				<div className="w-full max-w-md rounded-2xl border border-gray-a4 bg-gray-a2 p-8 backdrop-blur-xl">
-					<h1 className="text-8 font-bold mb-2 text-gray-12">Recon AI</h1>
-					<p className="text-4 text-gray-11 mb-8">
-						AI-powered lead research & cold calling scripts
-					</p>
+				<div
+					className="w-full max-w-md rounded-[10px] border p-8 backdrop-blur-xl"
+					style={{
+						background: "#17171e",
+						border: "1px solid #25252f",
+					}}
+				>
+					{/* Logo & Title */}
+					<div className="mb-8">
+						<h1
+							className="text-3xl font-extrabold mb-2 tracking-tight"
+							style={{
+								fontFamily: "'Plus Jakarta Sans', sans-serif",
+								color: "#edeef2",
+								letterSpacing: "-0.4px",
+							}}
+						>
+							Recon <span style={{ color: "#f0a020" }}>AI</span>
+						</h1>
+						<p
+							style={{
+								fontSize: "13px",
+								fontWeight: 500,
+								color: "#888898",
+								fontFamily: "'Plus Jakarta Sans', sans-serif",
+							}}
+						>
+							AI-powered lead research & cold calling scripts
+						</p>
+					</div>
 
+					{/* Content */}
 					{loading ? (
 						<div className="text-center py-8">
 							<div className="inline-block animate-spin">
-								<div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+								<div
+									className="w-5 h-5 border-2 border-t-transparent rounded-full"
+									style={{
+										borderColor: "#25252f",
+										borderTopColor: "#f0a020",
+									}}
+								/>
 							</div>
-							<p className="text-4 text-gray-11 mt-4">Checking access...</p>
+							<p
+								className="mt-3"
+								style={{
+									fontSize: "12px",
+									color: "#888898",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+								}}
+							>
+								Checking access...
+							</p>
 						</div>
 					) : (
-						<div className="space-y-4">
-							<p className="text-4 text-gray-10 mb-6">
-								Purchase access to unlock the full Recon AI platform
+						<div>
+							<p
+								className="mb-6"
+								style={{
+									fontSize: "13px",
+									color: "#55556a",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+									lineHeight: "1.6",
+								}}
+							>
+								Get instant access to research leads, generate personalized cold
+								calling scripts, and track your pipeline.
 							</p>
+
 							<a
 								href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-								className="block w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 text-center transition"
+								className="block w-full py-3 px-4 rounded-[10px] text-center font-semibold transition-all"
+								style={{
+									background: "#f0a020",
+									color: "#0b0b0f",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+									fontSize: "13px",
+									fontWeight: 600,
+									cursor: "pointer",
+									border: "none",
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.background = "#fbbf24";
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.background = "#f0a020";
+								}}
 							>
-								Get Access Now
-							</a>
-							<a
-								href="/experiences/test"
-								className="block w-full px-6 py-3 bg-gray-a6 text-gray-12 rounded-lg font-semibold hover:bg-gray-a7 text-center transition"
-							>
-								Try Demo
+								Unlock Recon AI
 							</a>
 						</div>
 					)}

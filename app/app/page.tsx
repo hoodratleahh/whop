@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AppPage() {
+function AppContent() {
 	const searchParams = useSearchParams();
 	const token = searchParams.get("token");
 	const [isValid, setIsValid] = useState<boolean | null>(null);
@@ -118,5 +118,24 @@ export default function AppPage() {
 				allow="clipboard-read; clipboard-write"
 			/>
 		</div>
+	);
+}
+
+export default function AppPage() {
+	return (
+		<Suspense
+			fallback={
+				<div
+					className="w-screen h-screen flex items-center justify-center"
+					style={{ background: "#0b0b0f" }}
+				>
+					<div style={{ color: "#edeef2", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+						Loading...
+					</div>
+				</div>
+			}
+		>
+			<AppContent />
+		</Suspense>
 	);
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function VerifyPage() {
+function VerifyContent() {
 	const searchParams = useSearchParams();
 	const email = searchParams.get("email") || "";
 	const [password, setPassword] = useState("");
@@ -175,5 +175,24 @@ export default function VerifyPage() {
 				</form>
 			</div>
 		</div>
+	);
+}
+
+export default function VerifyPage() {
+	return (
+		<Suspense
+			fallback={
+				<div
+					className="w-screen h-screen flex items-center justify-center"
+					style={{ background: "#0b0b0f" }}
+				>
+					<div style={{ color: "#edeef2", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+						Loading...
+					</div>
+				</div>
+			}
+		>
+			<VerifyContent />
+		</Suspense>
 	);
 }

@@ -57,10 +57,9 @@ export default async function CheckoutSuccessPage(props: { searchParams: Promise
 		);
 	}
 
-	// Unknown or missing status
-	if (status !== "success") {
-		redirect("/");
-	}
+	// If no status param but they're on this page, assume success
+	// Whop may not be appending ?status=success in the redirect
+	// Being on checkout-success page itself indicates purchase was processed
 
 	// WHOP SPEC: When status=success, Whop has confirmed the payment
 	// The membership webhook will fire shortly to grant actual access

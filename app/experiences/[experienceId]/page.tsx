@@ -116,10 +116,29 @@ export default async function ExperiencePage({
 		return (
 			<div className="flex min-h-screen items-center justify-center p-8">
 				<div className="max-w-lg rounded-xl border border-gray-a4 bg-gray-a2 p-6">
-					<h1 className="text-8 font-bold mb-2">Authentication Error</h1>
+					<h1 className="text-8 font-bold mb-2">Waiting for Access</h1>
 					<p className="text-4 text-gray-11 mb-6">
-						Unable to verify your access. Please try again or contact support.
+						We're setting up your account. This usually takes a few moments after purchase.
 					</p>
+					<p className="text-4 text-gray-11 mb-6">
+						Try refreshing the page, or check back in a minute.
+					</p>
+					<div style={{ display: "flex", gap: "12px" }}>
+						<button
+							onClick={() => window.location.reload()}
+							className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+						>
+							Refresh Page
+						</button>
+						<a
+							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="inline-block px-6 py-3 bg-gray-400 text-white rounded-lg font-semibold hover:bg-gray-500"
+						>
+							Back to Whop
+						</a>
+					</div>
 				</div>
 			</div>
 		);

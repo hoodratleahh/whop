@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { whopsdk } from "@/lib/whop-sdk";
 
 export default async function ExperiencePage({
@@ -9,8 +9,19 @@ export default async function ExperiencePage({
 	const { experienceId } = await params;
 
 	try {
-		// Ensure the user is logged in on Whop.
-		const { userId } = await whopsdk.verifyUserToken(await headers());
+		// Try to get userId from session cookie first (set at checkout)
+		const cookieStore = await cookies();
+		let userId = cookieStore.get("whop_user_id")?.value;
+
+		// If no session cookie, try to verify from Whop token in headers
+		if (!userId) {
+			const verified = await whopsdk.verifyUserToken(await headers());
+			userId = verified.userId;
+		}
+
+		if (!userId) {
+			throw new Error("No user authentication found");
+		}
 
 		// Verify user has access to Recon AI product
 		const productId = process.env.NEXT_PUBLIC_WHOP_PRODUCT_ID || "prod_wnUBQEF08WxYE";

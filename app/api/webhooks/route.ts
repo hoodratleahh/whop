@@ -1,5 +1,4 @@
 import { waitUntil } from "@vercel/functions";
-import type { Payment } from "@whop/sdk/resources.js";
 import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
@@ -18,12 +17,10 @@ export async function POST(request: NextRequest): Promise<Response> {
 		const webhookData = whopsdk.webhooks.unwrap(requestBodyText, { headers });
 
 		// Handle different webhook event types (per Whop docs)
-		if (webhookData.type === "payment.succeeded") {
-			waitUntil(handlePaymentSucceeded(webhookData.data));
-		} else if (webhookData.type === "membership.went_valid") {
+		if (webhookData.type === "membership.activated") {
 			// User gained access to product (per Whop spec)
 			waitUntil(handleMembershipValid(webhookData.data));
-		} else if (webhookData.type === "membership.went_invalid") {
+		} else if (webhookData.type === "membership.deactivated") {
 			// User lost access (subscription ended/canceled)
 			waitUntil(handleMembershipInvalid(webhookData.data));
 		} else if (webhookData.type === "payment.failed") {
@@ -39,14 +36,6 @@ export async function POST(request: NextRequest): Promise<Response> {
 	}
 }
 
-async function handlePaymentSucceeded(payment: Payment) {
-	console.log("[WEBHOOK] Payment succeeded:", {
-		paymentId: payment.id,
-		amount: payment.amount,
-		status: payment.status,
-		timestamp: new Date().toISOString(),
-	});
-}
 
 async function handleMembershipValid(membership: any) {
 	// Triggered when user gains access to product

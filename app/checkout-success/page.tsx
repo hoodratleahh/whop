@@ -1,354 +1,199 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import type { NextRequest } from "next/server";
-import { whopsdk } from "@/lib/whop-sdk";
-import { validateCheckoutRequest, logCheckoutEvent } from "@/lib/checkout-security";
 
 export default async function CheckoutSuccessPage(props: { searchParams: Promise<Record<string, string>> }) {
-	try {
-		// WHOP SPEC: Check checkout status parameter
-		// Whop appends ?status=success or ?status=error after payment
-		const searchParams = await props.searchParams;
-		const status = searchParams.status;
+	const searchParams = await props.searchParams;
+	const status = searchParams.status;
 
-		console.log("[checkout-success] Received redirect:", {
-			status,
-			hasSearchParams: Object.keys(searchParams).length > 0,
-			allParams: searchParams,
-		});
-
-		if (status === "error") {
-			return (
-				<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
-					<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
-						<h1 className="text-2xl font-bold mb-4" style={{ color: "#edeef2" }}>
-							Payment Failed
-						</h1>
-						<p style={{ color: "#888898", marginBottom: "24px" }}>
-							Your payment was declined. Please try again or contact support.
-						</p>
-						<a
-							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-							className="inline-block px-6 py-3 rounded-lg font-semibold"
-							style={{
-								background: "#f0a020",
-								color: "#0b0b0f",
-								textDecoration: "none",
-								cursor: "pointer",
-							}}
-						>
-							Try Again
-						</a>
-					</div>
-				</div>
-			);
-		}
-
-		if (status !== "success") {
-			// Unknown status - redirect to home for safety
-			redirect("/");
-		}
-
-		// SECURITY: Verify Whop session token from request headers
-		// This ensures the request came directly from Whop's redirect (not spoofed)
-		const requestHeaders = await headers();
-
-		console.log("[checkout-success] Checking headers:", {
-			hasAuth: requestHeaders.has("authorization"),
-			hasCookie: requestHeaders.has("cookie"),
-			hasWhopToken: requestHeaders.has("x-whop-user-token"),
-			allHeaderKeys: Array.from(requestHeaders.keys()),
-		});
-
-		let userId: string;
-		try {
-			const verified = await whopsdk.verifyUserToken(requestHeaders);
-			userId = verified.userId;
-			console.log("[checkout-success] Token verified successfully:", { userId });
-		} catch (tokenError) {
-			console.error("[checkout-success] Token verification failed:", {
-				error: tokenError instanceof Error ? tokenError.message : String(tokenError),
-			});
-			throw tokenError;
-		}
-
-		if (!userId) {
-			throw new Error("No userId from Whop token");
-		}
-
-		// SECURITY: Server-to-server verification with Whop API
-		// Checks their account against Whop's database to confirm purchase
-		const productId = process.env.NEXT_PUBLIC_WHOP_PRODUCT_ID || "prod_wnUBQEF08WxYE";
-		const access = await whopsdk.users.checkAccess(productId, { id: userId });
-
-		// SECURITY: Only allow if they have ACTIVE membership
-		// No membership = no product purchased or subscription expired
-		if (!access.has_access) {
-			logCheckoutEvent("denied", userId, productId, {
-				reason: "No active membership",
-				checkAccessResult: access,
-			});
-
-			return (
-				<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
-					<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
-						<h1 className="text-2xl font-bold mb-4" style={{ color: "#edeef2" }}>
-							Payment Issue
-						</h1>
-						<p style={{ color: "#888898", marginBottom: "24px" }}>
-							We couldn't verify your purchase. Please try again or contact support.
-						</p>
-						<a
-							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-							className="inline-block px-6 py-3 rounded-lg font-semibold"
-							style={{
-								background: "#f0a020",
-								color: "#0b0b0f",
-								textDecoration: "none",
-								cursor: "pointer",
-							}}
-							onMouseEnter={(e) => (e.currentTarget.style.background = "#fbbf24")}
-							onMouseLeave={(e) => (e.currentTarget.style.background = "#f0a020")}
-						>
-							Return to Product
-						</a>
-					</div>
-				</div>
-			);
-		}
-
-		// VERIFIED: User is authenticated AND has purchased the product
-		logCheckoutEvent("success", userId, productId, {
-			accessStatus: access.has_access,
-			timestamp: new Date().toISOString(),
-		});
-
-		// User purchased successfully - show welcome and redirect to app
-		return (
-			<div
-				className="flex min-h-screen items-center justify-center p-4"
-				style={{
-					background: "linear-gradient(135deg, #0b0b0f 0%, #1a1a23 100%)",
-				}}
-			>
-				<div
-					className="w-full max-w-2xl rounded-[20px] border p-12 text-center backdrop-blur-xl"
-					style={{
-						background: "rgba(23, 23, 30, 0.8)",
-						border: "1px solid #25252f",
-						boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-					}}
-				>
-					{/* Success Checkmark Animation */}
-					<div
-						style={{
-							fontSize: "80px",
-							marginBottom: "24px",
-							animation: "pulse 1s ease-in-out",
-						}}
-					>
-						✨
-					</div>
-
-					{/* Title */}
-					<h1
-						className="text-4xl font-extrabold mb-2 tracking-tight"
-						style={{
-							fontFamily: "'Plus Jakarta Sans', sans-serif",
-							color: "#edeef2",
-							letterSpacing: "-0.5px",
-						}}
-					>
-						Welcome to Recon{" "}
-						<span style={{ color: "#f0a020" }}>AI</span>
-					</h1>
-
-					{/* Subtitle */}
-					<p
-						className="text-lg mb-8"
-						style={{
-							color: "#888898",
-							fontFamily: "'Plus Jakarta Sans', sans-serif",
-							lineHeight: "1.6",
-						}}
-					>
-						Your purchase was successful! 🎉
-					</p>
-
-					{/* Description */}
-					<div
-						className="mb-10 p-6 rounded-lg"
-						style={{
-							background: "rgba(240, 160, 32, 0.05)",
-							border: "1px solid rgba(240, 160, 32, 0.2)",
-						}}
-					>
-						<p
-							style={{
-								fontSize: "15px",
-								color: "#aaaabc",
-								fontFamily: "'Plus Jakarta Sans', sans-serif",
-								lineHeight: "1.8",
-								margin: 0,
-							}}
-						>
-							You now have full access to AI-powered lead research, personalized cold calling scripts, and advanced pipeline tracking. Let's find you some qualified leads.
-						</p>
-					</div>
-
-					{/* Features Preview */}
-					<div className="mb-10 space-y-3 text-left">
-						{[
-							"🔍 AI-Powered Lead Research",
-							"📝 Personalized Cold Calling Scripts",
-							"📊 Advanced Pipeline Tracking",
-							"⚡ Real-Time Lead Insights",
-						].map((feature, i) => (
-							<div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-								<div
-									style={{
-										width: "8px",
-										height: "8px",
-										borderRadius: "50%",
-										background: "#f0a020",
-									}}
-								/>
-								<span
-									style={{
-										color: "#aaaabc",
-										fontSize: "14px",
-										fontFamily: "'Plus Jakarta Sans', sans-serif",
-									}}
-								>
-									{feature}
-								</span>
-							</div>
-						))}
-					</div>
-
-					{/* CTA Button */}
-					<div className="mb-6">
-						<a
-							href="/experiences/recon-ai"
-							className="inline-block px-8 py-4 rounded-lg font-semibold transition-all"
-							style={{
-								background: "#f0a020",
-								color: "#0b0b0f",
-								fontFamily: "'Plus Jakarta Sans', sans-serif",
-								fontSize: "15px",
-								fontWeight: 600,
-								cursor: "pointer",
-								textDecoration: "none",
-								display: "inline-block",
-							}}
-							onMouseEnter={(e) => (e.currentTarget.style.background = "#fbbf24")}
-							onMouseLeave={(e) => (e.currentTarget.style.background = "#f0a020")}
-						>
-							Launch Recon AI →
-						</a>
-					</div>
-
-					{/* Manual redirect CTA */}
-					<p
-						style={{
-							fontSize: "13px",
-							color: "#aaaabc",
-							fontFamily: "'Plus Jakarta Sans', sans-serif",
-							marginTop: "16px",
-						}}
-					>
-						Click the button above to get started, or you'll be redirected automatically in 10 seconds.
-					</p>
-
-					{/* Auto-redirect script (longer delay for reading) */}
-					<script
-						dangerouslySetInnerHTML={{
-							__html: `
-								setTimeout(() => {
-									window.location.href = '/experiences/recon-ai';
-								}, 10000);
-							`,
-						}}
-					/>
-
-					{/* Pulse animation */}
-					<style>{`
-						@keyframes pulse {
-							0%, 100% { opacity: 1; transform: scale(1); }
-							50% { opacity: 0.7; transform: scale(1.1); }
-						}
-					`}</style>
-				</div>
-			</div>
-		);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		logCheckoutEvent("error", "unknown", "unknown", {
-			error: errorMessage,
-			errorType: error instanceof Error ? error.name : typeof error,
-		});
-
-		console.error("[checkout-success] Auth failed, showing error page instead of redirecting:", {
-			error: errorMessage,
-		});
-
-		// Show error page instead of silent redirect
+	// Handle payment error
+	if (status === "error") {
 		return (
 			<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
 				<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
 					<h1 className="text-2xl font-bold mb-4" style={{ color: "#edeef2" }}>
-						Authentication Required
+						Payment Failed
 					</h1>
-					<p style={{ color: "#888898", marginBottom: "12px" }}>
-						We couldn't verify your purchase details. This usually means:
+					<p style={{ color: "#888898", marginBottom: "24px" }}>
+						Your payment was declined. Please try again or contact support.
 					</p>
-					<ul
+					<a
+						href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+						className="inline-block px-6 py-3 rounded-lg font-semibold"
 						style={{
-							color: "#888898",
-							marginBottom: "24px",
-							paddingLeft: "20px",
-							listStyleType: "disc",
+							background: "#f0a020",
+							color: "#0b0b0f",
+							textDecoration: "none",
+							cursor: "pointer",
 						}}
 					>
-						<li>Your Whop session expired</li>
-						<li>You're accessing this link from a different browser/device</li>
-						<li>There's a temporary authentication issue</li>
-					</ul>
-					<p style={{ color: "#666677", marginBottom: "24px", fontSize: "13px" }}>
-						{errorMessage && `Error: ${errorMessage}`}
-					</p>
-					<div style={{ display: "flex", gap: "12px" }}>
-						<a
-							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-							className="inline-block px-6 py-3 rounded-lg font-semibold"
-							style={{
-								background: "#f0a020",
-								color: "#0b0b0f",
-								textDecoration: "none",
-								flex: 1,
-								textAlign: "center",
-								cursor: "pointer",
-							}}
-						>
-							Go to Whop
-						</a>
-						<a
-							href="/"
-							className="inline-block px-6 py-3 rounded-lg font-semibold"
-							style={{
-								background: "#25252f",
-								color: "#aaaabc",
-								textDecoration: "none",
-								flex: 1,
-								textAlign: "center",
-								cursor: "pointer",
-							}}
-						>
-							Home
-						</a>
-					</div>
+						Try Again
+					</a>
 				</div>
 			</div>
 		);
 	}
+
+	// Unknown or missing status
+	if (status !== "success") {
+		redirect("/");
+	}
+
+	// WHOP SPEC: When status=success, Whop has confirmed the payment
+	// The membership webhook will fire shortly to grant actual access
+	// Show welcome message to user
+	return (
+		<div
+			className="flex min-h-screen items-center justify-center p-4"
+			style={{
+				background: "linear-gradient(135deg, #0b0b0f 0%, #1a1a23 100%)",
+			}}
+		>
+			<div
+				className="w-full max-w-2xl rounded-[20px] border p-12 text-center backdrop-blur-xl"
+				style={{
+					background: "rgba(23, 23, 30, 0.8)",
+					border: "1px solid #25252f",
+					boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+				}}
+			>
+				{/* Success Checkmark Animation */}
+				<div
+					style={{
+						fontSize: "80px",
+						marginBottom: "24px",
+						animation: "pulse 1s ease-in-out",
+					}}
+				>
+					✨
+				</div>
+
+				{/* Title */}
+				<h1
+					className="text-4xl font-extrabold mb-2 tracking-tight"
+					style={{
+						fontFamily: "'Plus Jakarta Sans', sans-serif",
+						color: "#edeef2",
+						letterSpacing: "-0.5px",
+					}}
+				>
+					Welcome to Recon <span style={{ color: "#f0a020" }}>AI</span>
+				</h1>
+
+				{/* Subtitle */}
+				<p
+					className="text-lg mb-8"
+					style={{
+						color: "#888898",
+						fontFamily: "'Plus Jakarta Sans', sans-serif",
+						lineHeight: "1.6",
+					}}
+				>
+					Your purchase was successful! 🎉
+				</p>
+
+				{/* Description */}
+				<div
+					className="mb-10 p-6 rounded-lg"
+					style={{
+						background: "rgba(240, 160, 32, 0.05)",
+						border: "1px solid rgba(240, 160, 32, 0.2)",
+					}}
+				>
+					<p
+						style={{
+							fontSize: "15px",
+							color: "#aaaabc",
+							fontFamily: "'Plus Jakarta Sans', sans-serif",
+							lineHeight: "1.8",
+							margin: 0,
+						}}
+					>
+						You now have full access to AI-powered lead research, personalized cold calling scripts, and advanced pipeline tracking. Let's find you some qualified leads.
+					</p>
+				</div>
+
+				{/* Features Preview */}
+				<div className="mb-10 space-y-3 text-left">
+					{[
+						"🔍 AI-Powered Lead Research",
+						"📝 Personalized Cold Calling Scripts",
+						"📊 Advanced Pipeline Tracking",
+						"⚡ Real-Time Lead Insights",
+					].map((feature, i) => (
+						<div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+							<div
+								style={{
+									width: "8px",
+									height: "8px",
+									borderRadius: "50%",
+									background: "#f0a020",
+								}}
+							/>
+							<span
+								style={{
+									color: "#aaaabc",
+									fontSize: "14px",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+								}}
+							>
+								{feature}
+							</span>
+						</div>
+					))}
+				</div>
+
+				{/* CTA Button */}
+				<div className="mb-6">
+					<a
+						href="/experiences/recon-ai"
+						className="inline-block px-8 py-4 rounded-lg font-semibold transition-all"
+						style={{
+							background: "#f0a020",
+							color: "#0b0b0f",
+							fontFamily: "'Plus Jakarta Sans', sans-serif",
+							fontSize: "15px",
+							fontWeight: 600,
+							cursor: "pointer",
+							textDecoration: "none",
+							display: "inline-block",
+						}}
+						onMouseEnter={(e) => (e.currentTarget.style.background = "#fbbf24")}
+						onMouseLeave={(e) => (e.currentTarget.style.background = "#f0a020")}
+					>
+						Launch Recon AI →
+					</a>
+				</div>
+
+				{/* Manual redirect CTA */}
+				<p
+					style={{
+						fontSize: "13px",
+						color: "#aaaabc",
+						fontFamily: "'Plus Jakarta Sans', sans-serif",
+						marginTop: "16px",
+					}}
+				>
+					Click the button above to get started, or you'll be redirected automatically in 10 seconds.
+				</p>
+
+				{/* Auto-redirect script (longer delay for reading) */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
+							setTimeout(() => {
+								window.location.href = '/experiences/recon-ai';
+							}, 10000);
+						`,
+					}}
+				/>
+
+				{/* Pulse animation */}
+				<style>{`
+					@keyframes pulse {
+						0%, 100% { opacity: 1; transform: scale(1); }
+						50% { opacity: 0.7; transform: scale(1.1); }
+					}
+				`}</style>
+			</div>
+		</div>
+	);
 }

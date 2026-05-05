@@ -1,18 +1,33 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
+import { validateCheckoutRequest, logCheckoutEvent } from "@/lib/checkout-security";
 
 export default async function CheckoutSuccessPage() {
 	try {
-		// Verify user has valid Whop session
-		const { userId } = await whopsdk.verifyUserToken(await headers());
+		// SECURITY: Verify Whop session token from request headers
+		// This ensures the request came directly from Whop's redirect (not spoofed)
+		const requestHeaders = await headers();
+		const { userId } = await whopsdk.verifyUserToken(requestHeaders);
 
-		// Verify they actually purchased the product
+		if (!userId) {
+			throw new Error("No userId from Whop token");
+		}
+
+		// SECURITY: Server-to-server verification with Whop API
+		// Checks their account against Whop's database to confirm purchase
 		const productId = process.env.NEXT_PUBLIC_WHOP_PRODUCT_ID || "prod_wnUBQEF08WxYE";
 		const access = await whopsdk.users.checkAccess(productId, { id: userId });
 
-		// If they don't have access, they didn't actually buy
+		// SECURITY: Only allow if they have ACTIVE membership
+		// No membership = no product purchased or subscription expired
 		if (!access.has_access) {
+			logCheckoutEvent("denied", userId, productId, {
+				reason: "No active membership",
+				checkAccessResult: access,
+			});
+
 			return (
 				<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
 					<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
@@ -40,6 +55,12 @@ export default async function CheckoutSuccessPage() {
 				</div>
 			);
 		}
+
+		// VERIFIED: User is authenticated AND has purchased the product
+		logCheckoutEvent("success", userId, productId, {
+			accessStatus: access.has_access,
+			timestamp: new Date().toISOString(),
+		});
 
 		// User purchased successfully - show welcome and redirect to app
 		return (
@@ -200,8 +221,12 @@ export default async function CheckoutSuccessPage() {
 			</div>
 		);
 	} catch (error) {
-		console.error("[checkout-success] Error:", error);
-		// Redirect to home on auth failure
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logCheckoutEvent("error", "unknown", "unknown", {
+			error: errorMessage,
+			errorType: error instanceof Error ? error.name : typeof error,
+		});
+		// Redirect to home on auth failure - no sensitive info leaked
 		redirect("/");
 	}
 }

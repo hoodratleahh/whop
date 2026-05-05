@@ -17,9 +17,18 @@ export async function POST(request: NextRequest): Promise<Response> {
 		const headers = Object.fromEntries(request.headers);
 		const webhookData = whopsdk.webhooks.unwrap(requestBodyText, { headers });
 
-		// Handle the webhook event
+		// Handle different webhook event types (per Whop docs)
 		if (webhookData.type === "payment.succeeded") {
 			waitUntil(handlePaymentSucceeded(webhookData.data));
+		} else if (webhookData.type === "membership.went_valid") {
+			// User gained access to product (per Whop spec)
+			waitUntil(handleMembershipValid(webhookData.data));
+		} else if (webhookData.type === "membership.went_invalid") {
+			// User lost access (subscription ended/canceled)
+			waitUntil(handleMembershipInvalid(webhookData.data));
+		} else if (webhookData.type === "payment.failed") {
+			// Payment failed (per Whop spec)
+			waitUntil(handlePaymentFailed(webhookData.data));
 		}
 
 		// Make sure to return a 2xx status code quickly. Otherwise the webhook will be retried.
@@ -31,7 +40,43 @@ export async function POST(request: NextRequest): Promise<Response> {
 }
 
 async function handlePaymentSucceeded(payment: Payment) {
-	// This is a placeholder for a potentially long running operation
-	// In a real scenario, you might need to fetch user data, update a database, etc.
-	console.log("[PAYMENT SUCCEEDED]", payment);
+	console.log("[WEBHOOK] Payment succeeded:", {
+		paymentId: payment.id,
+		amount: payment.amount,
+		status: payment.status,
+		timestamp: new Date().toISOString(),
+	});
+}
+
+async function handleMembershipValid(membership: any) {
+	// Triggered when user gains access to product
+	console.log("[WEBHOOK] Membership activated:", {
+		userId: membership.user_id,
+		productId: membership.product_id,
+		status: "ACTIVE",
+		timestamp: new Date().toISOString(),
+	});
+	// TODO: Send welcome email, update database, etc.
+}
+
+async function handleMembershipInvalid(membership: any) {
+	// Triggered when subscription ends/canceled
+	console.log("[WEBHOOK] Membership revoked:", {
+		userId: membership.user_id,
+		productId: membership.product_id,
+		status: "INACTIVE",
+		reason: membership.reason || "unknown",
+		timestamp: new Date().toISOString(),
+	});
+	// TODO: Notify user, revoke access, etc.
+}
+
+async function handlePaymentFailed(payment: any) {
+	// Triggered when payment fails
+	console.log("[WEBHOOK] Payment failed:", {
+		paymentId: payment.id,
+		reason: payment.failure_reason || "unknown",
+		timestamp: new Date().toISOString(),
+	});
+	// TODO: Alert user to retry, etc.
 }

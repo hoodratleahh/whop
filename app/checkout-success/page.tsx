@@ -4,8 +4,45 @@ import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
 import { validateCheckoutRequest, logCheckoutEvent } from "@/lib/checkout-security";
 
-export default async function CheckoutSuccessPage() {
+export default async function CheckoutSuccessPage(props: { searchParams: Promise<Record<string, string>> }) {
 	try {
+		// WHOP SPEC: Check checkout status parameter
+		// Whop appends ?status=success or ?status=error after payment
+		const searchParams = await props.searchParams;
+		const status = searchParams.status;
+
+		if (status === "error") {
+			return (
+				<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
+					<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
+						<h1 className="text-2xl font-bold mb-4" style={{ color: "#edeef2" }}>
+							Payment Failed
+						</h1>
+						<p style={{ color: "#888898", marginBottom: "24px" }}>
+							Your payment was declined. Please try again or contact support.
+						</p>
+						<a
+							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+							className="inline-block px-6 py-3 rounded-lg font-semibold"
+							style={{
+								background: "#f0a020",
+								color: "#0b0b0f",
+								textDecoration: "none",
+								cursor: "pointer",
+							}}
+						>
+							Try Again
+						</a>
+					</div>
+				</div>
+			);
+		}
+
+		if (status !== "success") {
+			// Unknown status - redirect to home for safety
+			redirect("/");
+		}
+
 		// SECURITY: Verify Whop session token from request headers
 		// This ensures the request came directly from Whop's redirect (not spoofed)
 		const requestHeaders = await headers();

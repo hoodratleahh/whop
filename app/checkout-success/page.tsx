@@ -1,33 +1,8 @@
 import { redirect } from "next/navigation";
-import { headers, cookies } from "next/headers";
-import { whopsdk } from "@/lib/whop-sdk";
 
 export default async function CheckoutSuccessPage(props: { searchParams: Promise<Record<string, string>> }) {
 	const searchParams = await props.searchParams;
 	const status = searchParams.status;
-
-	// Try to create a session from the Whop token in the redirect
-	if (status === "success") {
-		try {
-			const requestHeaders = await headers();
-			const verified = await whopsdk.verifyUserToken(requestHeaders);
-			if (verified.userId) {
-				// Create a session cookie with the userId
-				const cookieStore = await cookies();
-				cookieStore.set("whop_user_id", verified.userId, {
-					httpOnly: true,
-					secure: true,
-					sameSite: "lax",
-					maxAge: 7 * 24 * 60 * 60, // 7 days
-				});
-				console.log("[checkout-success] Session created for user:", verified.userId.slice(0, 8));
-			}
-		} catch (e) {
-			// Token verification failed, but we'll still show the welcome page
-			// The webhook will fire and grant access
-			console.log("[checkout-success] Could not create session from token:", e instanceof Error ? e.message : String(e));
-		}
-	}
 
 	// Handle payment error
 	if (status === "error") {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { whopsdk } from "@/lib/whop-sdk";
+import { hasAccess } from "@/lib/access-store";
 
 export default async function ExperiencePage({
 	params,
@@ -10,12 +11,17 @@ export default async function ExperiencePage({
 	const { experienceId } = await params;
 
 	try {
-		// Get userId from OAuth session cookie
-		const cookieStore = await cookies();
-		const userId = cookieStore.get("whop_user_id")?.value;
+		// Try to get userId from Whop token in headers
+		const verified = await whopsdk.verifyUserToken(await headers());
+		const userId = verified.userId;
 
 		if (!userId) {
-			redirect("/login");
+			throw new Error("No user ID found");
+		}
+
+		// Check if user has access (granted by webhook)
+		if (!hasAccess(userId)) {
+			throw new Error("No active purchase. Please try again in a moment.");
 		}
 
 		// Verify user has access to Recon AI product
@@ -107,16 +113,20 @@ export default async function ExperiencePage({
 			</div>
 		);
 	} catch (error) {
-		console.error(`[experiences] Auth error for ${experienceId}:`, error instanceof Error ? error.message : String(error));
+		const errorMsg = error instanceof Error ? error.message : String(error);
+		console.error(`[experiences] Auth error for ${experienceId}:`, errorMsg);
+
 		return (
 			<div className="flex min-h-screen items-center justify-center p-8">
 				<div className="max-w-lg rounded-xl border border-gray-a4 bg-gray-a2 p-6">
-					<h1 className="text-8 font-bold mb-2">Waiting for Access</h1>
-					<p className="text-4 text-gray-11 mb-6">
-						We're setting up your account. This usually takes a few moments after purchase.
+					<h1 className="text-8 font-bold mb-2">Access Required</h1>
+					<p className="text-4 text-gray-11 mb-4">
+						{errorMsg.includes("No active purchase")
+							? "We're setting up your account. This usually takes a moment after purchase."
+							: "Please complete your purchase on Whop to access Recon AI."}
 					</p>
 					<p className="text-4 text-gray-11 mb-6">
-						Try refreshing the page, or check back in a minute.
+						Try refreshing the page in a few moments.
 					</p>
 					<div style={{ display: "flex", gap: "12px" }}>
 						<button
@@ -131,7 +141,7 @@ export default async function ExperiencePage({
 							rel="noopener noreferrer"
 							className="inline-block px-6 py-3 bg-gray-400 text-white rounded-lg font-semibold hover:bg-gray-500"
 						>
-							Back to Whop
+							Buy Now
 						</a>
 					</div>
 				</div>

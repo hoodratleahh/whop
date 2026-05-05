@@ -2,6 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { grantAccess, revokeAccess } from "@/lib/access-store";
 
 export async function POST(request: NextRequest): Promise<Response> {
 	try {
@@ -38,26 +39,40 @@ export async function POST(request: NextRequest): Promise<Response> {
 
 
 async function handleMembershipValid(membership: any) {
-	// Triggered when user gains access to product
+	const userId = membership.user_id;
+	if (!userId) {
+		console.error("[WEBHOOK] No user_id in membership.activated event");
+		return;
+	}
+
+	// Grant access to the user
+	grantAccess(userId);
+
 	console.log("[WEBHOOK] Membership activated:", {
-		userId: membership.user_id,
+		userId: userId.slice(0, 8),
 		productId: membership.product_id,
 		status: "ACTIVE",
 		timestamp: new Date().toISOString(),
 	});
-	// TODO: Send welcome email, update database, etc.
 }
 
 async function handleMembershipInvalid(membership: any) {
-	// Triggered when subscription ends/canceled
+	const userId = membership.user_id;
+	if (!userId) {
+		console.error("[WEBHOOK] No user_id in membership.deactivated event");
+		return;
+	}
+
+	// Revoke access from the user
+	revokeAccess(userId);
+
 	console.log("[WEBHOOK] Membership revoked:", {
-		userId: membership.user_id,
+		userId: userId.slice(0, 8),
 		productId: membership.product_id,
 		status: "INACTIVE",
 		reason: membership.reason || "unknown",
 		timestamp: new Date().toISOString(),
 	});
-	// TODO: Notify user, revoke access, etc.
 }
 
 async function handlePaymentFailed(payment: any) {

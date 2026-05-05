@@ -11,6 +11,12 @@ export default async function CheckoutSuccessPage(props: { searchParams: Promise
 		const searchParams = await props.searchParams;
 		const status = searchParams.status;
 
+		console.log("[checkout-success] Received redirect:", {
+			status,
+			hasSearchParams: Object.keys(searchParams).length > 0,
+			allParams: searchParams,
+		});
+
 		if (status === "error") {
 			return (
 				<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
@@ -46,7 +52,25 @@ export default async function CheckoutSuccessPage(props: { searchParams: Promise
 		// SECURITY: Verify Whop session token from request headers
 		// This ensures the request came directly from Whop's redirect (not spoofed)
 		const requestHeaders = await headers();
-		const { userId } = await whopsdk.verifyUserToken(requestHeaders);
+
+		console.log("[checkout-success] Checking headers:", {
+			hasAuth: requestHeaders.has("authorization"),
+			hasCookie: requestHeaders.has("cookie"),
+			hasWhopToken: requestHeaders.has("x-whop-user-token"),
+			allHeaderKeys: Array.from(requestHeaders.keys()),
+		});
+
+		let userId: string;
+		try {
+			const verified = await whopsdk.verifyUserToken(requestHeaders);
+			userId = verified.userId;
+			console.log("[checkout-success] Token verified successfully:", { userId });
+		} catch (tokenError) {
+			console.error("[checkout-success] Token verification failed:", {
+				error: tokenError instanceof Error ? tokenError.message : String(tokenError),
+			});
+			throw tokenError;
+		}
 
 		if (!userId) {
 			throw new Error("No userId from Whop token");
@@ -263,7 +287,68 @@ export default async function CheckoutSuccessPage(props: { searchParams: Promise
 			error: errorMessage,
 			errorType: error instanceof Error ? error.name : typeof error,
 		});
-		// Redirect to home on auth failure - no sensitive info leaked
-		redirect("/");
+
+		console.error("[checkout-success] Auth failed, showing error page instead of redirecting:", {
+			error: errorMessage,
+		});
+
+		// Show error page instead of silent redirect
+		return (
+			<div className="flex min-h-screen items-center justify-center p-8" style={{ background: "#0b0b0f" }}>
+				<div className="max-w-lg rounded-xl border p-8" style={{ background: "#17171e", border: "1px solid #25252f" }}>
+					<h1 className="text-2xl font-bold mb-4" style={{ color: "#edeef2" }}>
+						Authentication Required
+					</h1>
+					<p style={{ color: "#888898", marginBottom: "12px" }}>
+						We couldn't verify your purchase details. This usually means:
+					</p>
+					<ul
+						style={{
+							color: "#888898",
+							marginBottom: "24px",
+							paddingLeft: "20px",
+							listStyleType: "disc",
+						}}
+					>
+						<li>Your Whop session expired</li>
+						<li>You're accessing this link from a different browser/device</li>
+						<li>There's a temporary authentication issue</li>
+					</ul>
+					<p style={{ color: "#666677", marginBottom: "24px", fontSize: "13px" }}>
+						{errorMessage && `Error: ${errorMessage}`}
+					</p>
+					<div style={{ display: "flex", gap: "12px" }}>
+						<a
+							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
+							className="inline-block px-6 py-3 rounded-lg font-semibold"
+							style={{
+								background: "#f0a020",
+								color: "#0b0b0f",
+								textDecoration: "none",
+								flex: 1,
+								textAlign: "center",
+								cursor: "pointer",
+							}}
+						>
+							Go to Whop
+						</a>
+						<a
+							href="/"
+							className="inline-block px-6 py-3 rounded-lg font-semibold"
+							style={{
+								background: "#25252f",
+								color: "#aaaabc",
+								textDecoration: "none",
+								flex: 1,
+								textAlign: "center",
+								cursor: "pointer",
+							}}
+						>
+							Home
+						</a>
+					</div>
+				</div>
+			</div>
+		);
 	}
 }

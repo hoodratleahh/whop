@@ -37,13 +37,67 @@ export default async function ExperiencePage({
 		}
 
 		return (
-			<div className="w-screen h-screen overflow-hidden">
-				<iframe
-					title="Recon Lead Tool"
-					src={`/api/tool?uid=${encodeURIComponent(userId)}`}
-					className="w-full h-full border-0"
-					allow="clipboard-read; clipboard-write"
-				/>
+			<div className="flex flex-col w-screen h-screen overflow-hidden">
+				{/* Auth Status Header */}
+				<div
+					style={{
+						background: "linear-gradient(90deg, rgba(240, 160, 32, 0.1) 0%, rgba(240, 160, 32, 0.05) 100%)",
+						borderBottom: "1px solid rgba(240, 160, 32, 0.2)",
+						padding: "12px 20px",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						flexShrink: 0,
+					}}
+				>
+					<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+						<div
+							style={{
+								width: "8px",
+								height: "8px",
+								borderRadius: "50%",
+								background: "#f0a020",
+								animation: "pulse 2s infinite",
+							}}
+						/>
+						<span
+							style={{
+								color: "#f0a020",
+								fontSize: "13px",
+								fontWeight: 600,
+								fontFamily: "'Plus Jakarta Sans', sans-serif",
+							}}
+						>
+							✓ Authenticated • Premium Access Active
+						</span>
+					</div>
+					<span
+						style={{
+							fontSize: "12px",
+							color: "#888898",
+							fontFamily: "'Plus Jakarta Sans', sans-serif",
+						}}
+					>
+						ID: {userId.slice(0, 8)}...
+					</span>
+				</div>
+
+				{/* App Content */}
+				<div className="flex-1 overflow-hidden">
+					<iframe
+						title="Recon Lead Tool"
+						src={`/api/tool?uid=${encodeURIComponent(userId)}`}
+						className="w-full h-full border-0"
+						allow="clipboard-read; clipboard-write"
+					/>
+				</div>
+
+				<style>{`
+					@keyframes pulse {
+						0%, 100% { opacity: 1; }
+						50% { opacity: 0.5; }
+					}
+				`}</style>
 			</div>
 		);
 	} catch (error) {

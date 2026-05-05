@@ -166,24 +166,25 @@ export default async function CheckoutSuccessPage() {
 						</a>
 					</div>
 
-					{/* Auto-redirect info */}
+					{/* Manual redirect CTA */}
 					<p
 						style={{
-							fontSize: "12px",
-							color: "#555567",
+							fontSize: "13px",
+							color: "#aaaabc",
 							fontFamily: "'Plus Jakarta Sans', sans-serif",
+							marginTop: "16px",
 						}}
 					>
-						Redirecting in 5 seconds...
+						Click the button above to get started, or you'll be redirected automatically in 10 seconds.
 					</p>
 
-					{/* Auto-redirect script */}
+					{/* Auto-redirect script (longer delay for reading) */}
 					<script
 						dangerouslySetInnerHTML={{
 							__html: `
 								setTimeout(() => {
 									window.location.href = '/experiences/recon-ai';
-								}, 5000);
+								}, 10000);
 							`,
 						}}
 					/>

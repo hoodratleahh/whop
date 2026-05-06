@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { grantAccess, revokeAccess } from "@/lib/access-store";
+import { getOrCreateLicense, revokeLicense } from "@/lib/license-store";
 
 export async function POST(request: NextRequest): Promise<Response> {
 	try {
@@ -39,36 +40,59 @@ export async function POST(request: NextRequest): Promise<Response> {
 
 
 async function handleMembershipValid(membership: any) {
-	const userId = membership.user_id;
+	// Log full payload to see structure
+	console.log("[WEBHOOK] Full membership payload:", JSON.stringify(membership, null, 2));
+
+	// Try different field names for user_id
+	const userId = membership.user_id || membership.userId || membership.user?.id || membership.access_pass?.user_id;
+	const productId = membership.product_id || membership.productId || membership.product?.id || "prod_wnUBQEF08WxYE";
+	const email = membership.user?.email || membership.email || membership.user?.account?.email;
+
 	if (!userId) {
-		console.error("[WEBHOOK] No user_id in membership.activated event");
+		console.error("[WEBHOOK] No user_id found. Membership data:", JSON.stringify(membership));
 		return;
 	}
 
-	// Grant access to the user
-	grantAccess(userId);
+	// Grant access to the user (store in Supabase)
+	await grantAccess(userId, productId);
+
+	// Get or create a license key (reuses existing if already present)
+	const licenseKey = await getOrCreateLicense(userId, productId, email);
 
 	console.log("[WEBHOOK] Membership activated:", {
 		userId: userId.slice(0, 8),
-		productId: membership.product_id,
+		productId,
+		email: email || "unknown",
+		licenseKey: licenseKey || "failed",
 		status: "ACTIVE",
 		timestamp: new Date().toISOString(),
 	});
 }
 
 async function handleMembershipInvalid(membership: any) {
-	const userId = membership.user_id;
+	// Try different field names for user_id
+	const userId = membership.user_id || membership.userId || membership.user?.id || membership.access_pass?.user_id;
+	const productId = membership.product_id || membership.productId || membership.product?.id || "prod_wnUBQEF08WxYE";
+
 	if (!userId) {
-		console.error("[WEBHOOK] No user_id in membership.deactivated event");
+		console.error("[WEBHOOK] No user_id found in deactivation event. Data:", JSON.stringify(membership));
 		return;
 	}
 
 	// Revoke access from the user
-	revokeAccess(userId);
+	await revokeAccess(userId, productId);
 
-	console.log("[WEBHOOK] Membership revoked:", {
+	// Also revoke all licenses for this user/product
+	const { getLicenseByUserId, revokeLicense } = await import("@/lib/license-store");
+	const licenseKey = await getLicenseByUserId(userId, productId);
+	if (licenseKey) {
+		await revokeLicense(licenseKey);
+	}
+
+	console.log("[WEBHOOK] Membership deactivated:", {
 		userId: userId.slice(0, 8),
-		productId: membership.product_id,
+		productId,
+		licenseRevoked: !!licenseKey,
 		status: "INACTIVE",
 		reason: membership.reason || "unknown",
 		timestamp: new Date().toISOString(),

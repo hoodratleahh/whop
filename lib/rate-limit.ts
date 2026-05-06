@@ -11,7 +11,7 @@ export function getClientIp(request: NextRequest): string {
 	return request.headers.get("x-real-ip") || "unknown";
 }
 
-export function isRateLimited(ip: string, limitPerMinute = 10): boolean {
+export function isRateLimited(ip: string, limitPerMinute = 60): boolean {
 	const now = Date.now();
 	const cutoff = now - 60_000;
 	const timestamps = (rateLimitStore.get(ip) || []).filter((t) => t > cutoff);

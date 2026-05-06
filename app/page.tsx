@@ -1,16 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function Page() {
+function PageContent() {
+	const searchParams = useSearchParams();
+	const licenseKey = searchParams?.get("license_key");
 	const [userId, setUserId] = useState<string | null>(null);
 	const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [licenseInput, setLicenseInput] = useState("");
 
 	useEffect(() => {
 		const checkAccess = async () => {
 			try {
-				const response = await fetch("/api/check-access");
+				const url = licenseKey
+					? `/api/check-access?license_key=${encodeURIComponent(licenseKey)}`
+					: "/api/check-access";
+
+				const response = await fetch(url, {
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json",
+						...(licenseKey && { "x-license-key": licenseKey }),
+					},
+				});
 				const data = await response.json();
 				setUserId(data.userId);
 				setHasAccess(data.hasAccess);
@@ -21,7 +35,7 @@ export default function Page() {
 			}
 		};
 		checkAccess();
-	}, []);
+	}, [licenseKey]);
 
 	if (hasAccess && userId) {
 		return (
@@ -32,6 +46,14 @@ export default function Page() {
 					className="w-full h-full border-0"
 					allow="clipboard-read; clipboard-write"
 				/>
+			</div>
+		);
+	}
+
+	if (loading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center" style={{ background: "#0b0b0f" }}>
+				<div style={{ color: "#888898", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Loading...</div>
 			</div>
 		);
 	}
@@ -106,7 +128,7 @@ export default function Page() {
 
 						<a
 							href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
-							className="block w-full py-3 px-4 rounded-[10px] text-center font-semibold transition-all"
+							className="block w-full py-3 px-4 rounded-[10px] text-center font-semibold transition-all mb-4"
 							style={{
 								background: "#f0a020",
 								color: "#0b0b0f",
@@ -125,9 +147,92 @@ export default function Page() {
 						>
 							Unlock Recon AI
 						</a>
+
+						{/* License Key Input */}
+						<div
+							style={{
+								padding: "12px",
+								background: "#1e1e27",
+								border: "1px solid #25252f",
+								borderRadius: "10px",
+								marginTop: "12px",
+							}}
+						>
+							<p
+								style={{
+									fontSize: "11px",
+									color: "#888898",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+									textTransform: "uppercase",
+									letterSpacing: "0.5px",
+									marginBottom: "8px",
+									fontWeight: 600,
+									margin: "0 0 8px 0",
+								}}
+							>
+								Have a license key?
+							</p>
+							<input
+								type="text"
+								placeholder="Paste your license key"
+								value={licenseInput}
+								onChange={(e) => setLicenseInput(e.target.value)}
+								onKeyPress={(e) => {
+									if (e.key === "Enter" && licenseInput) {
+										window.location.href = `?license_key=${encodeURIComponent(licenseInput)}`;
+									}
+								}}
+								style={{
+									width: "100%",
+									padding: "8px",
+									background: "#0b0b0f",
+									border: "1px solid #25252f",
+									borderRadius: "6px",
+									color: "#edeef2",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+									fontSize: "12px",
+									boxSizing: "border-box",
+									marginBottom: "8px",
+								}}
+							/>
+							<button
+								onClick={() => {
+									if (licenseInput) {
+										window.location.href = `?license_key=${encodeURIComponent(licenseInput)}`;
+									}
+								}}
+								style={{
+									width: "100%",
+									padding: "8px",
+									background: licenseInput ? "#f0a020" : "#555565",
+									color: "#0b0b0f",
+									border: "none",
+									borderRadius: "6px",
+									fontWeight: 600,
+									cursor: licenseInput ? "pointer" : "not-allowed",
+									fontFamily: "'Plus Jakarta Sans', sans-serif",
+									fontSize: "12px",
+								}}
+								disabled={!licenseInput}
+							>
+								Access with Key
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function Page() {
+	return (
+		<Suspense fallback={
+			<div className="flex min-h-screen items-center justify-center" style={{ background: "#0b0b0f" }}>
+				<div style={{ color: "#888898", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Loading...</div>
+			</div>
+		}>
+			<PageContent />
+		</Suspense>
 	);
 }

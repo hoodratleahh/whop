@@ -4,8 +4,8 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
 	const response = NextResponse.next();
 
-	// Prevent clickjacking (SAMEORIGIN because app is embedded in Whop dashboard iframe)
-	response.headers.set("X-Frame-Options", "SAMEORIGIN");
+	// Allow framing for internal iframes
+	response.headers.set("X-Frame-Options", "ALLOWALL");
 
 	// Prevent MIME sniffing
 	response.headers.set("X-Content-Type-Options", "nosniff");
@@ -24,11 +24,12 @@ export function middleware(request: NextRequest) {
 	response.headers.set(
 		"Content-Security-Policy",
 		"default-src 'self'; " +
-		"script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; " +
+		"script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://*.whop.com; " +
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
 		"font-src 'self' https://fonts.gstatic.com; " +
 		"img-src 'self' data: https:; " +
-		"connect-src 'self' https://*.whop.com https://openrouter.ai https://api.groq.com;"
+		"connect-src 'self' https://*.whop.com https://openrouter.ai https://api.groq.com https://api.whop.com; " +
+		"frame-ancestors 'self' https://*.whop.com;"
 	);
 
 	return response;

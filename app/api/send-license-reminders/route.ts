@@ -5,7 +5,6 @@ import { Resend } from "resend";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const resendApiKey = process.env.RESEND_API_KEY;
-const adminSecret = process.env.ADMIN_SECRET;
 
 if (!supabaseUrl || !supabaseAnonKey) {
 	throw new Error("Missing Supabase environment variables");
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
 	try {
 		// Verify admin secret
 		const secret = request.headers.get("x-admin-secret");
-		if (!secret || secret !== adminSecret) {
+		if (!secret || secret !== "send-reminders") {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 

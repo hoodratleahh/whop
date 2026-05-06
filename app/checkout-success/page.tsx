@@ -13,6 +13,33 @@ function CheckoutSuccessContent() {
 	const [verifyLoading, setVerifyLoading] = useState(false);
 	const [verifyError, setVerifyError] = useState<string | null>(null);
 
+	useEffect(() => {
+		const fetchLicenseKey = async () => {
+			try {
+				const response = await fetch("/api/check-access", {
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+				});
+				const data = await response.json();
+
+				if (data.userId) {
+					const licenseResponse = await fetch(
+						`/api/get-license?product=prod_wnUBQEF08WxYE`,
+						{ credentials: "include" }
+					);
+					const licenseData = await licenseResponse.json();
+					if (licenseData.licenseKey) {
+						setLicenseKey(licenseData.licenseKey);
+					}
+				}
+			} catch (error) {
+				console.log("License fetch failed, will use email verification");
+			}
+		};
+
+		fetchLicenseKey();
+	}, []);
+
 	const handleSendVerificationCode = async () => {
 		if (!verifyEmail) {
 			setVerifyError("Please enter your email");

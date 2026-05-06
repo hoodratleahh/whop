@@ -1,9 +1,13 @@
 import { waitUntil } from "@vercel/functions";
 import type { NextRequest } from "next/server";
 import { whopsdk } from "@/lib/whop-sdk";
+import { Resend } from "resend";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { grantAccess, revokeAccess } from "@/lib/access-store";
 import { getOrCreateLicense, revokeLicense } from "@/lib/license-store";
+
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(request: NextRequest): Promise<Response> {
 	try {
@@ -59,6 +63,15 @@ async function handleMembershipValid(membership: any) {
 	// Get or create a license key (reuses existing if already present)
 	const licenseKey = await getOrCreateLicense(userId, productId, email);
 
+	// Send license key email if we have an email and Resend is configured
+	if (email && licenseKey && resend) {
+		try {
+			await sendLicenseKeyEmail(email, licenseKey);
+		} catch (error) {
+			console.error("[WEBHOOK] Failed to send license key email:", error);
+		}
+	}
+
 	console.log("[WEBHOOK] Membership activated:", {
 		userId: userId.slice(0, 8),
 		productId,
@@ -107,4 +120,43 @@ async function handlePaymentFailed(payment: any) {
 		timestamp: new Date().toISOString(),
 	});
 	// TODO: Alert user to retry, etc.
+}
+
+async function sendLicenseKeyEmail(email: string, licenseKey: string) {
+	if (!resend) {
+		console.log("[WEBHOOK] Resend not configured, skipping license email");
+		return;
+	}
+
+	console.log(`[WEBHOOK] Sending license key email to ${email}`);
+	const accessUrl = `https://testol.wtf/experiences/recon-ai?license_key=${encodeURIComponent(licenseKey)}`;
+
+	const result = await resend.emails.send({
+		from: "noreply@testol.wtf",
+		to: email,
+		subject: "Your Recon AI License Key",
+		html: `
+			<div style="font-family: Arial, sans-serif; max-width: 500px;">
+				<h2>Welcome to Recon AI! 🎉</h2>
+				<p>Thank you for your purchase! Your license key is ready to use.</p>
+				<div style="background: #f0a020; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+					<p style="margin: 0 0 10px 0; font-size: 12px; color: #0b0b0f; font-weight: bold; text-transform: uppercase;">Your License Key</p>
+					<p style="margin: 0; font-size: 18px; font-family: 'Courier New', monospace; color: #0b0b0f; font-weight: bold; word-break: break-all;">
+						${licenseKey}
+					</p>
+				</div>
+				<p style="margin: 20px 0;">You can use this key to access Recon AI:</p>
+				<ol style="line-height: 1.8;">
+					<li>Visit <a href="${accessUrl}" style="color: #f0a020;">your access link</a></li>
+					<li>Or paste your key on any page asking for it</li>
+					<li>Keep this email safe in case you need to retrieve it later</li>
+				</ol>
+				<p style="color: #666; font-size: 12px; margin-top: 30px;">
+					If you have any questions, feel free to reach out. Happy researching! 🚀
+				</p>
+			</div>
+		`,
+	});
+
+	console.log(`[WEBHOOK] License key email sent to ${email}:`, result);
 }

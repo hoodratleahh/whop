@@ -7,38 +7,72 @@ function CheckoutSuccessContent() {
 	const searchParams = useSearchParams();
 	const status = searchParams.get("status");
 	const [licenseKey, setLicenseKey] = useState<string | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [email, setEmail] = useState("");
+	const [verifyEmail, setVerifyEmail] = useState("");
+	const [verifyCode, setVerifyCode] = useState("");
+	const [verifyStep, setVerifyStep] = useState<"email" | "code" | null>(null);
+	const [verifyLoading, setVerifyLoading] = useState(false);
+	const [verifyError, setVerifyError] = useState<string | null>(null);
 
-	const handleGetLicense = async () => {
-		if (!email) {
-			setError("Please enter your email");
+	const handleSendVerificationCode = async () => {
+		if (!verifyEmail) {
+			setVerifyError("Please enter your email");
 			return;
 		}
 
-		setLoading(true);
-		setError(null);
+		setVerifyLoading(true);
+		setVerifyError(null);
 
 		try {
-			const response = await fetch(`/api/get-license?email=${encodeURIComponent(email)}`, {
-				credentials: "include",
-				headers: {
-					"Content-Type": "application/json",
-				},
+			const response = await fetch("/api/verify-email", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ email: verifyEmail }),
 			});
 			const data = await response.json();
 
 			if (!response.ok) {
-				setError(data.error || "Failed to retrieve license");
+				setVerifyError(data.error || "Failed to send code");
+				return;
+			}
+
+			setVerifyStep("code");
+		} catch (err) {
+			setVerifyError("Failed to send verification code");
+		} finally {
+			setVerifyLoading(false);
+		}
+	};
+
+	const handleVerifyCode = async () => {
+		if (!verifyCode) {
+			setVerifyError("Please enter the code");
+			return;
+		}
+
+		setVerifyLoading(true);
+		setVerifyError(null);
+
+		try {
+			const response = await fetch("/api/verify-code", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ email: verifyEmail, code: verifyCode }),
+			});
+			const data = await response.json();
+
+			if (!response.ok) {
+				setVerifyError(data.error || "Invalid code");
 				return;
 			}
 
 			setLicenseKey(data.licenseKey);
+			setVerifyStep(null);
+			setVerifyEmail("");
+			setVerifyCode("");
 		} catch (err) {
-			setError("Failed to retrieve license");
+			setVerifyError("Failed to verify code");
 		} finally {
-			setLoading(false);
+			setVerifyLoading(false);
 		}
 	};
 
@@ -218,58 +252,105 @@ function CheckoutSuccessContent() {
 							🔑 Get Your License Key
 						</p>
 						<div style={{ marginBottom: "12px" }}>
-							<input
-								type="email"
-								placeholder="Enter your email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								onKeyPress={(e) => {
-									if (e.key === "Enter") handleGetLicense();
-								}}
-								style={{
-									width: "100%",
-									padding: "10px",
-									background: "#0b0b0f",
-									border: "1px solid #25252f",
-									borderRadius: "6px",
-									color: "#edeef2",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-									fontSize: "13px",
-									boxSizing: "border-box",
-									marginBottom: "8px",
-								}}
-							/>
-							<button
-								onClick={handleGetLicense}
-								disabled={loading}
-								style={{
-									width: "100%",
-									padding: "10px",
-									background: loading ? "#888898" : "#f0a020",
-									color: "#0b0b0f",
-									border: "none",
-									borderRadius: "6px",
-									fontWeight: 600,
-									cursor: loading ? "not-allowed" : "pointer",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-									fontSize: "13px",
-								}}
-							>
-								{loading ? "Retrieving..." : "Reveal License Key"}
-							</button>
+							{verifyStep === "code" ? (
+								<>
+									<input
+										type="text"
+										placeholder="Enter 4-digit code"
+										value={verifyCode}
+										onChange={(e) => setVerifyCode(e.target.value)}
+										maxLength={4}
+										onKeyPress={(e) => {
+											if (e.key === "Enter") handleVerifyCode();
+										}}
+										style={{
+											width: "100%",
+											padding: "10px",
+											background: "#0b0b0f",
+											border: "1px solid #25252f",
+											borderRadius: "6px",
+											color: "#edeef2",
+											fontFamily: "'Plus Jakarta Sans', sans-serif",
+											fontSize: "13px",
+											boxSizing: "border-box",
+											marginBottom: "8px",
+										}}
+									/>
+									<button
+										onClick={handleVerifyCode}
+										disabled={verifyLoading}
+										style={{
+											width: "100%",
+											padding: "10px",
+											background: verifyLoading ? "#888898" : "#f0a020",
+											color: "#0b0b0f",
+											border: "none",
+											borderRadius: "6px",
+											fontWeight: 600,
+											cursor: verifyLoading ? "not-allowed" : "pointer",
+											fontFamily: "'Plus Jakarta Sans', sans-serif",
+											fontSize: "13px",
+										}}
+									>
+										{verifyLoading ? "Verifying..." : "Verify Code"}
+									</button>
+								</>
+							) : (
+								<>
+									<input
+										type="email"
+										placeholder="Enter your email"
+										value={verifyEmail}
+										onChange={(e) => setVerifyEmail(e.target.value)}
+										onKeyPress={(e) => {
+											if (e.key === "Enter") handleSendVerificationCode();
+										}}
+										style={{
+											width: "100%",
+											padding: "10px",
+											background: "#0b0b0f",
+											border: "1px solid #25252f",
+											borderRadius: "6px",
+											color: "#edeef2",
+											fontFamily: "'Plus Jakarta Sans', sans-serif",
+											fontSize: "13px",
+											boxSizing: "border-box",
+											marginBottom: "8px",
+										}}
+									/>
+									<button
+										onClick={handleSendVerificationCode}
+										disabled={verifyLoading}
+										style={{
+											width: "100%",
+											padding: "10px",
+											background: verifyLoading ? "#888898" : "#f0a020",
+											color: "#0b0b0f",
+											border: "none",
+											borderRadius: "6px",
+											fontWeight: 600,
+											cursor: verifyLoading ? "not-allowed" : "pointer",
+											fontFamily: "'Plus Jakarta Sans', sans-serif",
+											fontSize: "13px",
+										}}
+									>
+										{verifyLoading ? "Sending..." : "Send Code"}
+									</button>
+								</>
+							)}
+							{verifyError && (
+								<p
+									style={{
+										fontSize: "12px",
+										color: "#ef4444",
+										fontFamily: "'Plus Jakarta Sans', sans-serif",
+										marginTop: "8px",
+									}}
+								>
+									{verifyError}
+								</p>
+							)}
 						</div>
-						{error && (
-							<p
-								style={{
-									fontSize: "12px",
-									color: "#ef4444",
-									fontFamily: "'Plus Jakarta Sans', sans-serif",
-									margin: "8px 0 0 0",
-								}}
-							>
-								{error}
-							</p>
-						)}
 					</div>
 				) : (
 					<div

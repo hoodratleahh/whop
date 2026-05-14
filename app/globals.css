@@ -13,3 +13,19 @@ body {
 	color: var(--foreground);
 	font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Animations for homepage */
+@keyframes blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+
+@keyframes pulseGlow {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50% { opacity: 0.6; transform: scale(1.6); }
+}
+
+@keyframes scanLine {
+	0% { transform: translateX(-100%); }
+	100% { transform: translateX(400%); }
+}

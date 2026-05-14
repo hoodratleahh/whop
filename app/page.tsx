@@ -525,7 +525,7 @@ function Hero({
 					marginBottom: 44,
 				}}
 			>
-				Instant prospect research and personalized cold calling scripts —
+				Instant prospect research and personalized cold calling scripts:
 				so every call you make is already won.
 			</p>
 
@@ -583,7 +583,7 @@ function Hero({
 					marginBottom: 52,
 				}}
 			>
-				{["Secure via Whop", "500+ Active Members", "AI-Generated Scripts"].map(
+				{["Secure via Whop", "500+ Active Members", "Cancel anytime"].map(
 					(t, i) => (
 						<span
 							key={i}
@@ -697,27 +697,30 @@ function Stats() {
 
 const FEATURES = [
 	{
-		sym: "◎",
-		title: "Lead Intelligence",
-		desc: "Deep prospect research in seconds. Company intel, decision makers, and personalized talking points — all surfaced automatically before you dial.",
+	sym: "◎",
+	title: "Lead Intelligence",
+	desc: "Deep prospect research in seconds. Company intel, decision makers, and talking points surfaced automatically before you dial.",
+	visual: "radar",
 	},
 	{
-		sym: "✦",
-		title: "Script Generator",
-		desc: "Cold calling scripts personalized to every prospect. Walk into each call fully prepared and confident in exactly what to say.",
+	sym: "✦",
+	title: "Script Generator",
+	desc: "Cold calling scripts personalized to every prospect. Walk into each call fully prepared and confident in exactly what to say.",
+	visual: "lines",
 	},
 	{
-		sym: "◈",
-		title: "Pipeline Tracker",
-		desc: "Track every deal from first touch to close. Know exactly where each prospect stands without the endless manual updates.",
+	sym: "◈",
+	title: "Pipeline Tracker",
+	desc: "Track every deal from first touch to close. Know exactly where each prospect stands without endless manual updates.",
+	visual: "bars",
 	},
 	{
-		sym: "⬡",
-		title: "Real-time Insights",
-		desc: "Live market signals and buyer intent data. Reach prospects at the exact moment they are most ready to engage.",
+	sym: "⬡",
+	title: "Real-time Insights",
+	desc: "Live website analysis and issue detection. Reach leads at the moment they have the most to gain from your offer.",
+	visual: "network",
 	},
 ];
-
 function FeatureCard({
 	feature,
 	delay,
@@ -728,76 +731,36 @@ function FeatureCard({
 	visible: boolean;
 }) {
 	const [hov, setHov] = useState(false);
+
+	const SimpleIcon = () => (
+		<div style={{
+			width: 80,
+			height: 80,
+			borderRadius: 12,
+			background: `rgba(240,160,32,0.08)`,
+			border: `1px solid rgba(240,160,32,0.16)`,
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			fontSize: 32,
+			color: C.accent,
+			transition: "all 0.3s ease"
+		}}>
+			{feature.sym}
+		</div>
+	);
+
 	return (
-		<div
-			style={{
-				opacity: visible ? 1 : 0,
-				transform: visible ? "translateY(0)" : "translateY(26px)",
-				transition: `opacity 0.72s ease ${delay}ms, transform 0.72s ease ${delay}ms`,
-			}}
-		>
-			<div
-				onMouseEnter={() => setHov(true)}
-				onMouseLeave={() => setHov(false)}
-				style={{
-					height: "100%",
-					padding: "clamp(22px,3vw,32px)",
-					background: hov ? C.surfaceHover : C.surface,
-					border: `1px solid ${hov ? "rgba(240,160,32,0.28)" : C.border}`,
-					borderRadius: 16,
-					cursor: "default",
-					transform: hov ? "translateY(-5px)" : "translateY(0)",
-					transition:
-						"background 0.2s, border-color 0.22s, box-shadow 0.25s, transform 0.28s ease",
-					boxShadow: hov
-						? "0 20px 52px rgba(0,0,0,0.42)"
-						: "none",
-				}}
-			>
-				<div
-					style={{
-						width: 44,
-						height: 44,
-						borderRadius: 10,
-						background: hov
-							? "rgba(240,160,32,0.18)"
-							: "rgba(240,160,32,0.1)",
-						border: `1px solid ${
-							hov ? "rgba(240,160,32,0.36)" : "rgba(240,160,32,0.2)"
-						}`,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						fontSize: 18,
-						marginBottom: 18,
-						color: C.accent,
-						transition: "background 0.2s, border-color 0.2s",
-					}}
-				>
-					{feature.sym}
+		<div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(26px)", transition: `opacity 0.72s ease ${delay}ms, transform 0.72s ease ${delay}ms` }}>
+			<div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ height: "100%", padding: "32px 24px", background: hov ? C.surfaceHover : C.surface, border: `1px solid ${hov ? "rgba(240,160,32,0.3)" : C.border}`, borderRadius: 16, cursor: "default", transform: hov ? "translateY(-4px)" : "translateY(0)", transition: "background 0.2s, border-color 0.22s, box-shadow 0.25s, transform 0.28s ease", boxShadow: hov ? "0 20px 52px rgba(0,0,0,0.42), inset 0 0 40px rgba(240,160,32,0.04)" : "none", display: "flex", flexDirection: "column" }}>
+				<h3 style={{ fontFamily: FF, fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 16, marginTop: 0, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>{feature.title}</h3>
+				<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 160, margin: "20px 0" }}>
+					<SimpleIcon />
 				</div>
-				<h3
-					style={{
-						fontFamily: FF,
-						fontWeight: 700,
-						fontSize: 17,
-						color: C.text,
-						marginBottom: 10,
-					}}
-				>
-					{feature.title}
-				</h3>
-				<p
-					style={{
-						fontFamily: FF,
-						fontSize: 14,
-						color: C.muted,
-						lineHeight: 1.78,
-						margin: 0,
-					}}
-				>
-					{feature.desc}
-				</p>
+				<div style={{ paddingTop: 16, borderTop: `1px solid ${C.border}`, display: "flex", gap: 12, alignItems: "flex-start" }}>
+					<p style={{ fontFamily: FF, fontSize: 14, color: C.muted, lineHeight: 1.6, margin: 0, flex: 1 }}>{feature.desc}</p>
+					<div style={{ color: C.accent, fontSize: 16, opacity: hov ? 1 : 0.6, transition: "opacity 0.2s" }}>→</div>
+				</div>
 			</div>
 		</div>
 	);
@@ -853,7 +816,7 @@ function Features() {
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+					gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
 					gap: 20,
 				}}
 			>
@@ -864,6 +827,166 @@ function Features() {
 						delay={i * 110}
 						visible={visible}
 					/>
+				))}
+			</div>
+		</section>
+	);
+}
+
+const TESTIMONIALS = [
+	{
+		name: "Marcus T.",
+		role: "SDR, SaaS startup",
+		quote: "I used to spend 45 minutes researching a single prospect. Recon AI cuts that to under 2. My call volume doubled in the first week.",
+		metric: "2x call volume",
+	},
+	{
+		name: "Priya S.",
+		role: "Freelance Sales Consultant",
+		quote: "The cold call scripts are scary good. They reference the exact pain points I found in research. My open rate went from 8% to 31%.",
+		metric: "31% open rate",
+	},
+	{
+		name: "Derek W.",
+		role: "Founder, local marketing agency",
+		quote: "I close local businesses on website packages. Recon shows me who has no website, slow site, bad reviews — I walk into every call already knowing their problem.",
+		metric: "$24k closed in month one",
+	},
+];
+
+function Testimonials() {
+	const [ref, visible] = useScrollReveal(0.15);
+	return (
+		<section
+			ref={ref}
+			style={{
+				position: "relative",
+				zIndex: 1,
+				borderTop: "1px solid #1a1a24",
+				padding: "clamp(56px,9vh,96px) clamp(20px,5vw,72px)",
+			}}
+		>
+			<div style={{ textAlign: "center", marginBottom: 48 }}>
+				<div
+					style={{
+						fontSize: 11,
+						fontWeight: 700,
+						letterSpacing: "1.5px",
+						color: C.accent,
+						textTransform: "uppercase",
+						fontFamily: FF,
+						marginBottom: 14,
+					}}
+				>
+					What users say
+				</div>
+				<h2
+					style={{
+						fontFamily: FF,
+						fontWeight: 800,
+						fontSize: "clamp(26px,4vw,50px)",
+						color: C.text,
+						letterSpacing: "-0.028em",
+						lineHeight: 1.12,
+						maxWidth: 580,
+						margin: "0 auto",
+						opacity: visible ? 1 : 0,
+						transform: visible ? "translateY(0)" : "translateY(24px)",
+						transition: "opacity 0.85s ease, transform 0.85s ease",
+					}}
+				>
+					Closing more deals on day one.
+				</h2>
+			</div>
+
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+					gap: 24,
+					maxWidth: 1160,
+					margin: "0 auto",
+				}}
+			>
+				{TESTIMONIALS.map((t, i) => (
+					<div
+						key={i}
+						style={{
+							background: "#111116",
+							border: `1px solid ${C.border}`,
+							borderRadius: 12,
+							padding: 24,
+							display: "flex",
+							flexDirection: "column",
+							gap: 16,
+							opacity: visible ? 1 : 0,
+							transform: visible ? "translateY(0)" : "translateY(24px)",
+							transition: `opacity 0.85s ease ${i * 100}ms, transform 0.85s ease ${i * 100}ms`,
+						}}
+					>
+						<p
+							style={{
+								fontFamily: FF,
+								fontSize: 14,
+								color: C.text,
+								lineHeight: 1.75,
+								flex: 1,
+								margin: 0,
+							}}
+						>
+							"{t.quote}"
+						</p>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: 8,
+							}}
+						>
+							<span
+								style={{
+									background: "rgba(34,197,94,0.12)",
+									border: "1px solid rgba(34,197,94,0.3)",
+									color: "#22c55e",
+									fontSize: 12,
+									fontWeight: 700,
+									fontFamily: FF,
+									padding: "4px 10px",
+									borderRadius: 4,
+									whiteSpace: "nowrap",
+								}}
+							>
+								✓ {t.metric}
+							</span>
+						</div>
+						<div
+							style={{
+								borderTop: `1px solid ${C.border}`,
+								paddingTop: 12,
+							}}
+						>
+							<div
+								style={{
+									fontSize: 13,
+									fontWeight: 700,
+									color: C.text,
+									fontFamily: FF,
+									marginBottom: 2,
+								}}
+							>
+								{t.name}
+							</div>
+							<div
+								style={{
+									fontSize: 12,
+									color: C.dim,
+									fontFamily: FF,
+								}}
+							>
+								{t.role}
+							</div>
+						</div>
+					</div>
 				))}
 			</div>
 		</section>
@@ -911,7 +1034,7 @@ function BottomCTA({ onLicenseClick }: { onLicenseClick: () => void }) {
 					transition: "opacity 0.8s ease, transform 0.8s ease",
 				}}
 			>
-				Ready to close more deals?
+				Every day you wait is a deal someone else closes.
 			</h2>
 			<p
 				style={{
@@ -924,7 +1047,7 @@ function BottomCTA({ onLicenseClick }: { onLicenseClick: () => void }) {
 					transition: "opacity 0.8s ease 120ms",
 				}}
 			>
-				Join 500+ sales professionals using Recon AI to win more business.
+				500+ reps are already researching smarter, calling faster, and closing more. Your next prospect is already in Recon AI — are you?
 			</p>
 			<div
 				style={{
@@ -941,7 +1064,7 @@ function BottomCTA({ onLicenseClick }: { onLicenseClick: () => void }) {
 					href="https://whop.com/recon-lead-systems/recon-lead-systems-a8/"
 					large
 				>
-					Unlock Recon AI →
+					Start Closing Now →
 				</CTAButton>
 				<button
 					onClick={onLicenseClick}
@@ -1174,6 +1297,7 @@ function PageContent() {
 			<Stats />
 			<Features />
 			<FeaturesShowcase />
+			<Testimonials />
 			<BottomCTA onLicenseClick={scrollToLicense} />
 			<LicenseSection />
 			<Footer />

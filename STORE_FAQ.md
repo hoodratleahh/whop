@@ -1,21 +1,21 @@
-# Recon AI — Frequently Asked Questions
+# Recon AI: Frequently Asked Questions
 
 ## General Questions
 
 ### What is Recon AI?
-Recon AI is an AI-powered lead research and cold calling tool designed for sales professionals, SDRs, and entrepreneurs. It helps you find qualified leads, generate personalized cold calling scripts, and track your sales pipeline — all powered by advanced AI.
+Recon AI is an AI-powered lead research and cold calling tool designed for sales professionals, SDRs, and entrepreneurs. It helps you find qualified leads, generate personalized cold calling scripts, and track your sales pipeline, all powered by advanced AI.
 
 ### Who should use Recon AI?
-- **Sales Development Representatives (SDRs)** — Find and qualify leads faster
-- **Entrepreneurs** — Build your customer base efficiently
-- **Sales Teams** — Scale outreach with AI-generated scripts
-- **Anyone doing cold outreach** — Personalized approach for better conversion
+- **Sales Development Representatives (SDRs)**: Find and qualify leads faster
+- **Entrepreneurs**: Build your customer base efficiently
+- **Sales Teams**: Scale outreach with AI-generated scripts
+- **Anyone doing cold outreach**: Personalized approach for better conversion
 
 ### How does Recon AI work?
-1. **Search & Research** — Input company/industry details and get AI-powered lead insights
-2. **Generate Scripts** — Get personalized cold calling scripts tailored to each prospect
-3. **Track Pipeline** — Organize leads, track conversations, and monitor your sales progress
-4. **Analyze Performance** — Monitor your XP, streaks, and key metrics
+1. **Search & Research**: Input company/industry details and get AI-powered lead insights
+2. **Generate Scripts**: Get personalized cold calling scripts tailored to each prospect
+3. **Track Pipeline**: Organize leads, track conversations, and monitor your sales progress
+4. **Analyze Performance**: Monitor your XP, streaks, and key metrics
 
 ---
 
@@ -45,8 +45,8 @@ Recon AI is an AI-powered lead research and cold calling tool designed for sales
 
 ### Can I use my own API keys?
 Yes! In the Settings panel, you can add your own:
-- **OpenRouter API key** — for lead research AI
-- **Groq API key** — for faster script generation
+- **OpenRouter API key**: for lead research AI
+- **Groq API key**: for faster script generation
 
 Using your own keys gives you full control and potentially lower costs at scale.
 
@@ -62,8 +62,8 @@ Your data is stored securely in your browser's local storage. We also provide an
 
 ### Can I export my leads and data?
 Yes! In the **Settings** panel, you can:
-- **Download Backup** — Export all your leads, scripts, and stats as JSON
-- **Import Data** — Restore data from a previous backup
+- **Download Backup**: Export all your leads, scripts, and stats as JSON
+- **Import Data**: Restore data from a previous backup
 
 This ensures you always have control of your data.
 
@@ -185,9 +185,9 @@ Need help? See our setup guides for each API provider.
 ## Support & Contact
 
 ### How do I contact support?
-- **For billing/account issues:** Contact Whop support directly
-- **For technical issues:** Email support or check our help docs
-- **For feature requests:** Let us know! We're always improving
+- **For billing/account issues**: Contact Whop support directly
+- **For technical issues**: Email support or check our help docs
+- **For feature requests**: Let us know! We're always improving
 
 ### How long does support take to respond?
 We aim to respond to all inquiries within 24 hours during business days.

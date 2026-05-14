@@ -9,7 +9,7 @@ export default function DiscoverPage() {
 				{/* Main Description Card */}
 				<div className="bg-white rounded-xl p-8 shadow-md text-center mb-16">
 					<p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-						This is your app's discover page—showcase what your app does
+						This is your app's discover page. Showcase what your app does
 						and how it helps creators.
 					</p>
 					<p className="text-base text-gray-500 max-w-2xl mx-auto mb-2">

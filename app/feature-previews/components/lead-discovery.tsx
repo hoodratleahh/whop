@@ -2,192 +2,119 @@
 
 import React, { useState, useEffect } from 'react';
 
-interface LeadCard {
-  id: number;
-  name: string;
-  score: number;
-  issues: string[];
-}
-
-const LEADS: LeadCard[] = [
-  {
-    id: 1,
-    name: 'ABC Plumbing Co',
-    score: 92,
-    issues: ['NO WEBSITE'],
-  },
-  {
-    id: 2,
-    name: 'Quick Drain Services',
-    score: 78,
-    issues: ['Slow site'],
-  },
-  {
-    id: 3,
-    name: 'Expert Pipe Repairs',
-    score: 65,
-    issues: ['FB only', 'Slow site'],
-  },
-  {
-    id: 4,
-    name: 'Modern Plumbing Plus',
-    score: 88,
-    issues: [],
-  },
+const LEADS = [
+  { id: 1, name: 'ABC Plumbing', location: 'Austin, TX', score: 92, badge: 'PRIORITY' },
+  { id: 2, name: 'Quick Drain', location: 'Austin, TX', score: 78, badge: 'QUALIFIED' },
+  { id: 3, name: 'Expert Repairs', location: 'Austin, TX', score: 65, badge: 'WARM' },
+  { id: 4, name: 'Modern Plumb Co', location: 'Austin, TX', score: 88, badge: 'HOT' },
 ];
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return '#4ade80'; // green
-  if (score >= 70) return '#facc15'; // amber
-  return '#f87171'; // red
+  if (score >= 85) return { bg: '#22c55e15', border: '#22c55e60', text: '#22c55e' };
+  if (score >= 70) return { bg: '#f59e0b15', border: '#f59e0b60', text: '#f59e0b' };
+  return { bg: '#ef444415', border: '#ef444460', text: '#ef4444' };
 };
 
 export default function LeadDiscoveryPreview() {
-  const [displayedText, setDisplayedText] = useState('');
-  const [visibleLeads, setVisibleLeads] = useState<number>(0);
-  const [liveCount, setLiveCount] = useState(0);
+  const [visibleLeads, setVisibleLeads] = useState(0);
   const [cycle, setCycle] = useState(0);
 
-  const fullText = 'Plumbers · Austin, TX';
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCycle((c) => c + 1);
-    }, 6000);
+    const interval = setInterval(() => setCycle((c) => c + 1), 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Typewriter effect
   useEffect(() => {
-    setDisplayedText('');
     setVisibleLeads(0);
-    setLiveCount(0);
-
-    const typeTimer = setTimeout(() => {
-      let index = 0;
-      const typeInterval = setInterval(() => {
-        if (index <= fullText.length) {
-          setDisplayedText(fullText.slice(0, index));
-          index++;
-        } else {
-          clearInterval(typeInterval);
-        }
-      }, 50);
-      return () => clearInterval(typeInterval);
-    }, 200);
-
-    const cardTimer = setTimeout(() => {
-      let cardCount = 0;
-      const cardInterval = setInterval(() => {
-        if (cardCount < LEADS.length) {
-          setVisibleLeads(cardCount + 1);
-          cardCount++;
-        } else {
-          clearInterval(cardInterval);
-        }
-      }, 150);
-      return () => clearInterval(cardInterval);
-    }, 1500);
-
-    const countTimer = setTimeout(() => {
-      let count = 0;
-      const countInterval = setInterval(() => {
-        if (count < 4324) {
-          count += Math.floor(4324 / 30);
-          setLiveCount(Math.min(count, 4324));
-        } else {
-          clearInterval(countInterval);
-        }
-      }, 50);
-      return () => clearInterval(countInterval);
-    }, 1500);
-
-    return () => {
-      clearTimeout(typeTimer);
-      clearTimeout(cardTimer);
-      clearTimeout(countTimer);
-    };
+    const timer = setTimeout(() => {
+      LEADS.forEach((_, i) => {
+        setTimeout(() => setVisibleLeads((v) => v + 1), i * 200);
+      });
+    }, 600);
+    return () => clearTimeout(timer);
   }, [cycle]);
 
   return (
-    <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="border border-[#25252f] rounded-lg p-4 bg-[#0b0b0f]">
-        <div className="flex items-center gap-3">
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#f0a020]/5 to-transparent rounded-lg pointer-events-none" />
+        <div className="border border-[#25252f] rounded-lg px-4 py-3 bg-[#0b0b0f] flex items-center gap-3">
           <span className="text-[#888898]">🔍</span>
-          <div className="flex-1">
-            <div className="text-[#edeef2] font-medium h-6">
-              {displayedText}
-              <span className="animate-pulse">|</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Scanning Bar */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-[#888898]">Scanning leads</span>
-          <span className="text-[#f0a020] font-semibold">{liveCount.toLocaleString()} live</span>
-        </div>
-        <div className="h-2 bg-[#25252f] rounded overflow-hidden">
-          <div
-            className="h-full bg-[#f0a020] animate-pulse"
-            style={{
-              width: '45%',
-              animation: 'pulse 1.2s ease-in-out infinite',
-            }}
+          <input
+            type="text"
+            placeholder="Plumbers · Austin, TX"
+            className="flex-1 bg-transparent text-[#edeef2] placeholder-[#888898] focus:outline-none text-sm"
+            readOnly
           />
         </div>
       </div>
 
-      {/* Lead Cards */}
-      <div className="space-y-3">
-        {LEADS.slice(0, visibleLeads).map((lead, index) => (
-          <div
-            key={lead.id}
-            className="border border-[#25252f] rounded p-4 bg-[#0b0b0f] animate-fadeInUp"
-            style={{
-              animation: `fadeInUp 0.4s ease-out ${index * 100}ms both`,
-            }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h4 className="font-semibold text-[#edeef2]">{lead.name}</h4>
-                <div className="flex gap-2 mt-2">
-                  {lead.issues.map((issue) => (
-                    <span
-                      key={issue}
-                      className="text-xs px-2 py-1 rounded bg-[#25252f] text-[#888898]"
+      {/* Results Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {LEADS.map((lead, idx) => {
+          const colors = getScoreColor(lead.score);
+          const isVisible = idx < visibleLeads;
+          return (
+            <div
+              key={lead.id}
+              className="border rounded-lg overflow-hidden transition-all duration-500"
+              style={{
+                borderColor: isVisible ? colors.border : '#25252f',
+                background: isVisible ? colors.bg : '#0b0b0f',
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
+              }}
+            >
+              <div className="p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-[#edeef2]">{lead.name}</h4>
+                    <p className="text-xs text-[#888898]">{lead.location}</p>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className="text-lg font-bold"
+                      style={{ color: colors.text }}
                     >
-                      {issue}
-                    </span>
-                  ))}
+                      {lead.score}%
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="inline-block text-xs px-2 py-1 rounded-full font-medium"
+                  style={{
+                    backgroundColor: `${colors.text}25`,
+                    color: colors.text,
+                  }}
+                >
+                  {lead.badge}
                 </div>
               </div>
-              <div
-                className="text-2xl font-bold"
-                style={{ color: getScoreColor(lead.score) }}
-              >
-                {lead.score}
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
+      {/* Stats Bar */}
+      <div className="mt-4 pt-4 border-t border-[#25252f]">
+        <div className="flex items-center justify-around text-center">
+          <div>
+            <div className="text-[#f0a020] font-bold text-lg">4,324</div>
+            <div className="text-[#888898] text-xs">Leads found</div>
+          </div>
+          <div className="w-px h-8 bg-[#25252f]" />
+          <div>
+            <div className="text-[#22c55e] font-bold text-lg">68%</div>
+            <div className="text-[#888898] text-xs">Have websites</div>
+          </div>
+          <div className="w-px h-8 bg-[#25252f]" />
+          <div>
+            <div className="text-[#f59e0b] font-bold text-lg">892</div>
+            <div className="text-[#888898] text-xs">High quality</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

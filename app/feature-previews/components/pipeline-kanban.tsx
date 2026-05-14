@@ -2,96 +2,85 @@
 
 import React, { useState, useEffect } from 'react';
 
-interface Card {
-  id: number;
-  name: string;
-  company: string;
-}
+const COLUMNS = ['New', 'Called', 'Interested', 'Follow-up', 'Closed'];
+const COLUMN_ACCENTS = ['#888898', '#60a5fa', '#f59e0b', '#f0a020', '#22c55e'];
 
-const COLUMNS = ['New', 'Called', 'Interested', 'Closed'];
-const COLUMN_COLORS = [
-  '#55556a', // New - gray
-  '#60a5fa', // Called - blue
-  '#facc15', // Interested - amber
-  '#4ade80', // Closed - green
+const STATIC_CARDS = [
+  { name: 'John Smith', company: 'ABC Corp' },
+  { name: 'Sarah Johnson', company: 'Tech Solutions' },
 ];
 
-const ALL_CARDS: Card[] = [
-  { id: 1, name: 'John Smith', company: 'ABC Corp' },
-  { id: 2, name: 'Sarah Johnson', company: 'Tech Solutions' },
-  { id: 3, name: 'Mike Chen', company: 'Growth Co' },
-  { id: 4, name: 'Round Rock Plumb.', company: 'Round Rock Services' },
-  { id: 5, name: 'Emma Wilson', company: 'Design Studio' },
-];
+const MOVING_CARD = { name: 'Round Rock Plumb.', company: 'Round Rock Services' };
 
 export default function PipelineKanbanPreview() {
-  const [movingCardColumn, setMovingCardColumn] = useState(0);
+  const [movingCardPos, setMovingCardPos] = useState(0);
   const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCycle((c) => c + 1);
-    }, 2200);
+    const interval = setInterval(() => setCycle((c) => c + 1), 6000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    setMovingCardColumn(0);
+    setMovingCardPos(0);
     const timer = setTimeout(() => {
-      let col = 0;
+      let pos = 0;
       const moveInterval = setInterval(() => {
-        if (col < COLUMNS.length - 1) {
-          col++;
-          setMovingCardColumn(col);
+        if (pos < COLUMNS.length - 1) {
+          pos++;
+          setMovingCardPos(pos);
         } else {
           clearInterval(moveInterval);
         }
-      }, 550);
+      }, 1000);
       return () => clearInterval(moveInterval);
-    }, 100);
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [cycle]);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-4 gap-4 min-w-full">
+    <div className="overflow-x-auto -mx-4 px-4">
+      <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, 160px)` }}>
         {COLUMNS.map((column, colIndex) => (
-          <div key={column} className="min-w-[200px]">
+          <div key={column} className="flex flex-col">
+            {/* Column header */}
             <div className="mb-3">
-              <h3 className="font-semibold text-sm text-[#888898]">{column}</h3>
+              <h3 className="text-xs font-semibold text-[#888898] uppercase tracking-wider">{column}</h3>
               <div
-                className="h-1 w-12 rounded mt-2"
-                style={{ backgroundColor: COLUMN_COLORS[colIndex] }}
+                className="h-1 w-8 rounded mt-2 transition-all duration-300"
+                style={{
+                  backgroundColor: movingCardPos === colIndex ? COLUMN_ACCENTS[colIndex] : '#25252f',
+                  opacity: movingCardPos === colIndex ? 1 : 0.4,
+                }}
               />
             </div>
 
-            <div className="space-y-3">
-              {/* Static cards for this column */}
-              {ALL_CARDS.slice(0, 2).map((card) => (
+            {/* Cards */}
+            <div className="space-y-2 flex-1">
+              {/* Static cards */}
+              {STATIC_CARDS.map((card, cardIdx) => (
                 <div
-                  key={`${colIndex}-${card.id}`}
-                  className="border border-[#25252f] rounded p-3 bg-[#0b0b0f] text-sm"
+                  key={cardIdx}
+                  className="border border-[#25252f] rounded-lg p-2.5 bg-[#0b0b0f] text-xs hover:border-[#f0a020]/30 transition-colors duration-200"
                 >
                   <div className="font-medium text-[#edeef2]">{card.name}</div>
-                  <div className="text-xs text-[#888898] mt-1">{card.company}</div>
+                  <div className="text-[#888898] mt-1 text-xs">{card.company}</div>
                 </div>
               ))}
 
-              {/* Moving card (Round Rock Plumb.) */}
-              {movingCardColumn === colIndex && (
+              {/* Moving card */}
+              {movingCardPos === colIndex && (
                 <div
-                  className="border-2 rounded p-3 text-sm animate-fadeIn"
+                  className="rounded-lg p-2.5 text-xs transition-all duration-500"
                   style={{
-                    borderColor: COLUMN_COLORS[colIndex],
-                    backgroundColor: '#0b0b0f',
-                    boxShadow: `0 0 20px ${COLUMN_COLORS[colIndex]}33`,
-                    animation: 'fadeIn 0.4s ease-out',
+                    border: `2px solid ${COLUMN_ACCENTS[colIndex]}`,
+                    background: `${COLUMN_ACCENTS[colIndex]}08`,
+                    boxShadow: `0 8px 24px ${COLUMN_ACCENTS[colIndex]}20`,
                   }}
                 >
-                  <div className="font-semibold text-[#edeef2]">Round Rock Plumb.</div>
-                  <div className="text-xs mt-1" style={{ color: COLUMN_COLORS[colIndex] }}>
-                    Round Rock Services
+                  <div className="font-semibold text-[#edeef2]">{MOVING_CARD.name}</div>
+                  <div style={{ color: COLUMN_ACCENTS[colIndex] }} className="mt-1 text-xs font-medium">
+                    {MOVING_CARD.company}
                   </div>
                 </div>
               )}
@@ -99,17 +88,6 @@ export default function PipelineKanbanPreview() {
           </div>
         ))}
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   );
 }

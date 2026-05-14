@@ -4,123 +4,69 @@ import React, { useState, useEffect } from 'react';
 
 const SCRIPTS = [
   {
-    number: 1,
-    title: 'Opening',
-    content:
-      'Hi [name], I noticed [specific company insight] and thought it made sense to call. Do you have 30 seconds?',
+    step: 1,
+    label: 'Opening',
+    content: 'Hi [name], I noticed [your company] is in [industry]. Made sense to reach out. Got 30 seconds?',
   },
   {
-    number: 2,
-    title: 'Value prop',
-    content:
-      "We help companies like yours close deals faster through prospect research and personalized scripts. Most reps using us see a 3x reply rate lift.",
+    step: 2,
+    label: 'Problem',
+    content: 'Most companies like yours spend weeks on research. We help teams find qualified leads in minutes.',
   },
   {
-    number: 3,
-    title: 'Close',
-    content:
-      "Worth a quick 15-minute call next week? I can show you exactly how it works.",
+    step: 3,
+    label: 'Proof',
+    content: 'Our customers see 3x more replies. Here's how it works — [brief demo]. Worth 15 minutes next week?',
   },
 ];
 
 export default function ColdCallScriptsPreview() {
-  const [displayedScripts, setDisplayedScripts] = useState<
-    { number: number; title: string; content: string; displayedText: string }[]
-  >([]);
-  const [copied, setCopied] = useState(false);
+  const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
+  const [showCopyFeedback, setShowCopyFeedback] = useState(false);
   const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCycle((c) => c + 1);
-    }, 12000);
+    const interval = setInterval(() => setCycle((c) => c + 1), 10000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    setDisplayedScripts([]);
-    setCopied(false);
+    setVisibleSteps([]);
+    setShowCopyFeedback(false);
 
-    SCRIPTS.forEach((script, scriptIndex) => {
-      const startDelay = scriptIndex * 2200;
-      const typeTimer = setTimeout(() => {
-        let charIndex = 0;
-        const typeInterval = setInterval(() => {
-          if (charIndex <= script.content.length) {
-            setDisplayedScripts((prev) => {
-              const updated = [...prev];
-              const existing = updated.find((s) => s.number === script.number);
-              if (existing) {
-                existing.displayedText = script.content.slice(0, charIndex);
-              } else {
-                updated.push({
-                  ...script,
-                  displayedText: script.content.slice(0, charIndex),
-                });
-              }
-              return updated;
-            });
-            charIndex++;
-          } else {
-            clearInterval(typeInterval);
-          }
-        }, 15);
-        return () => clearInterval(typeInterval);
-      }, startDelay);
-
-      return () => clearTimeout(typeTimer);
+    SCRIPTS.forEach((_, idx) => {
+      setTimeout(() => setVisibleSteps((v) => [...v, idx]), idx * 1600);
     });
 
-    const copyTimer = setTimeout(() => {
-      setCopied(true);
-      const resetTimer = setTimeout(() => {
-        setCopied(false);
-      }, 1000);
-      return () => clearTimeout(resetTimer);
-    }, 7000);
-
-    return () => clearTimeout(copyTimer);
+    setTimeout(() => setShowCopyFeedback(true), 5500);
+    setTimeout(() => setShowCopyFeedback(false), 6500);
   }, [cycle]);
 
-  const handleCopy = () => {
-    const fullText = SCRIPTS.map(
-      (s) => `${s.number}. ${s.title}\n${s.content}`
-    ).join('\n\n');
-    navigator.clipboard.writeText(fullText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Scripts */}
-      <div className="space-y-4">
-        {SCRIPTS.map((script) => {
-          const displayed = displayedScripts.find((s) => s.number === script.number);
+    <div className="space-y-5">
+      {/* Script Steps */}
+      <div className="space-y-3">
+        {SCRIPTS.map((script, idx) => {
+          const isVisible = visibleSteps.includes(idx);
           return (
             <div
-              key={script.number}
-              className="border border-[#25252f] rounded p-4 bg-[#0b0b0f]"
+              key={script.step}
+              className="rounded-lg overflow-hidden transition-all duration-500"
               style={{
-                opacity: displayed ? 1 : 0,
-                transition: 'opacity 0.3s ease-out',
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'translateX(0)' : 'translateX(-12px)',
               }}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex gap-3 p-4 bg-[#0b0b0f] border border-[#25252f] hover:border-[#f0a020]/40 transition-colors">
                 <div
-                  className="text-lg font-bold w-6 h-6 rounded flex items-center justify-center text-[#0b0b0f]"
+                  className="flex items-center justify-center w-8 h-8 rounded-full text-[#0b0b0f] font-bold text-sm flex-shrink-0"
                   style={{ backgroundColor: '#f0a020' }}
                 >
-                  {script.number}
+                  {script.step}
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-[#edeef2] mb-1">{script.title}</h4>
-                  <p className="text-sm text-[#888898] leading-relaxed">
-                    {displayed?.displayedText}
-                    {(displayed?.displayedText ?? '').length < script.content.length && (
-                      <span className="animate-pulse">|</span>
-                    )}
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[#edeef2] font-semibold text-sm mb-1">{script.label}</h4>
+                  <p className="text-[#888898] text-xs leading-relaxed">{script.content}</p>
                 </div>
               </div>
             </div>
@@ -129,24 +75,21 @@ export default function ColdCallScriptsPreview() {
       </div>
 
       {/* Copy Button */}
-      <div>
-        <button
-          onClick={handleCopy}
-          className="w-full px-4 py-3 rounded-lg font-semibold transition-all"
-          style={{
-            backgroundColor: copied ? '#4ade80' : '#f0a020',
-            color: copied ? '#0b0b0f' : '#0b0b0f',
-          }}
-        >
-          {copied ? '✓ Copied!' : 'Copy all scripts'}
-        </button>
-      </div>
+      <button
+        className="w-full px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300"
+        style={{
+          backgroundColor: showCopyFeedback ? '#22c55e' : '#f0a020',
+          color: '#0b0b0f',
+          transform: showCopyFeedback ? 'scale(0.98)' : 'scale(1)',
+        }}
+      >
+        {showCopyFeedback ? '✓ Copied to clipboard' : 'Copy scripts'}
+      </button>
 
-      <style jsx>{`
-        button {
-          transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-      `}</style>
+      {/* Info text */}
+      <p className="text-[#888898] text-xs text-center">
+        Personalized scripts for every lead. Just fill in the [bracketed] details.
+      </p>
     </div>
   );
 }

@@ -16,7 +16,7 @@ const SCRIPTS = [
   {
     step: 3,
     label: 'Proof',
-    content: 'Our customers see 3x more replies. Here's how it works — [brief demo]. Worth 15 minutes next week?',
+    content: "Our customers see 3x more replies. Here's how it works — [brief demo]. Worth 15 minutes next week?",
   },
 ];
 

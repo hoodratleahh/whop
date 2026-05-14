@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, Suspense } from "react";
+import { FeaturesShowcase } from "./components/FeaturesShowcase";
 
 const FF = "'Plus Jakarta Sans', sans-serif";
 const C = {
@@ -1172,6 +1173,7 @@ function PageContent() {
 			<Hero headline={headline} onLicenseClick={scrollToLicense} />
 			<Stats />
 			<Features />
+			<FeaturesShowcase />
 			<BottomCTA onLicenseClick={scrollToLicense} />
 			<LicenseSection />
 			<Footer />

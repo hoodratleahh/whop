@@ -1,6 +1,9 @@
 export default function DiscoverPage() {
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative">
+			<div className="fixed bottom-6 right-6 text-xs text-gray-500 font-medium">
+				Updated: May 14, 2026
+			</div>
 			<div className="max-w-4xl mx-auto px-4 py-16">
 				{/* Title */}
 				<h1 className="text-5xl font-bold text-gray-900 mb-6 text-center">

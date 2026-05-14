@@ -1228,6 +1228,9 @@ function Footer() {
 			<p style={{ fontFamily: FF, fontSize: 12, color: C.dim, margin: 0 }}>
 				© 2026 Recon AI. All rights reserved.
 			</p>
+			<div style={{ fontFamily: FF, fontSize: 11, color: C.dim, marginLeft: "auto" }}>
+				Updated: May 14, 2026
+			</div>
 		</footer>
 	);
 }
